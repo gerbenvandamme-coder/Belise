@@ -113,7 +113,7 @@ export default function HomePage() {
 
           <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-[2rem] shadow-[0_30px_60px_-30px_rgba(28,25,23,0.35)] ring-1 ring-taupe/30 lg:max-w-none">
             <Image
-              src="/assets/front/Clean%20front%20picture.jpg"
+              src="/assets/Front/Clean%20front%20picture.jpg"
               alt="Zaakvoerder van Belise"
               fill
               priority

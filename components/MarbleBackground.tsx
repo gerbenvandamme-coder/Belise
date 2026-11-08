@@ -3,8 +3,8 @@
 import type { CSSProperties } from 'react';
 
 const BACKGROUND = {
-  desktop: '/assets/background/background_desktop.jpg',
-  mobile: '/assets/background/background_mobile.jpg',
+  desktop: '/assets/Background/background_desktop.jpg',
+  mobile: '/assets/Background/background_mobile.jpg',
   surface: '#F9F8F6',
   mobileQuery: '(max-width: 640px)',
 } as const;
