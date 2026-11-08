@@ -157,10 +157,10 @@ export default function TimeSlotPicker({
               type="button"
               aria-pressed={selected}
               onClick={() => onSelectTime(slot.time)}
-              className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors duration-200 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-taupe active:scale-[0.97] ${
+              className={`rounded-full border px-3 py-2 text-sm font-medium transition-colors duration-200 motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.97] ${
                 selected
-                  ? 'border-primary bg-primary text-canvas'
-                  : 'border-taupe/50 text-primary hover:border-primary hover:bg-blush/40'
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-taupe/50 text-primary hover:border-accent hover:bg-accent-soft'
               }`}
             >
               {slot.time}

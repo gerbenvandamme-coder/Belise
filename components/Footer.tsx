@@ -16,7 +16,8 @@ export default function Footer() {
             {SALON.name}
           </p>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary/70">
-            Nagelsalon voor verfijnde behandelingen en persoonlijke nagelkunst.
+            Beautysalon voor make-up, haar, nagels en behandelingen voor handen en voeten, met
+            aandacht voor elk detail.
           </p>
         </div>
 

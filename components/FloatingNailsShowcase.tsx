@@ -129,7 +129,7 @@ export default function FloatingNailsShowcase() {
           </p>
           <h2
             id="showcase-heading"
-            className="mt-4 font-headline font-normal leading-[1] tracking-[-0.02em] text-stone-900 text-4xl sm:text-5xl lg:text-6xl"
+            className="mt-4 font-serif font-normal leading-[1] tracking-[-0.02em] text-stone-900 text-4xl sm:text-5xl lg:text-6xl"
           >
             Recente sets
           </h2>

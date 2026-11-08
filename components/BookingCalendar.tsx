@@ -14,7 +14,7 @@ const DAY_FORMATTER = new Intl.DateTimeFormat('nl-BE', {
 });
 
 const FOCUS_RING =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-taupe';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 
 // TimeSlotPicker importeert deze helpers nog via dit bestand.
 export { startOfDay, toDateKey };
@@ -43,10 +43,10 @@ type DayButtonProps = {
 
 function DayButton({ date, selected, disabled, onSelect }: DayButtonProps) {
   const stateClass = selected
-    ? 'bg-primary font-medium text-canvas shadow-sm'
+    ? 'bg-accent font-medium text-white shadow-sm'
     : disabled
       ? 'cursor-not-allowed text-primary/25'
-      : 'text-primary hover:bg-blush/50';
+      : 'text-primary hover:bg-accent-soft hover:text-accent-dark';
 
   return (
     <button
@@ -61,7 +61,7 @@ function DayButton({ date, selected, disabled, onSelect }: DayButtonProps) {
       {!disabled && (
         <span
           aria-hidden="true"
-          className={`absolute bottom-1.5 h-1 w-1 rounded-full ${selected ? 'bg-canvas' : 'bg-taupe'}`}
+          className={`absolute bottom-1.5 h-1 w-1 rounded-full ${selected ? 'bg-white' : 'bg-accent'}`}
         />
       )}
     </button>
@@ -103,7 +103,7 @@ export default function BookingCalendar({ selectedDate, onSelectDate }: BookingC
           aria-label="Vorige maand"
           disabled={!canGoBack}
           onClick={() => shiftMonth(-1)}
-          className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-blush/50 disabled:cursor-not-allowed disabled:text-primary/25 disabled:hover:bg-transparent ${FOCUS_RING}`}
+          className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-accent-soft hover:text-accent-dark disabled:cursor-not-allowed disabled:text-primary/25 disabled:hover:bg-transparent ${FOCUS_RING}`}
         >
           <ChevronLeft size={18} aria-hidden="true" />
         </button>
@@ -116,7 +116,7 @@ export default function BookingCalendar({ selectedDate, onSelectDate }: BookingC
           type="button"
           aria-label="Volgende maand"
           onClick={() => shiftMonth(1)}
-          className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-blush/50 ${FOCUS_RING}`}
+          className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-accent-soft hover:text-accent-dark ${FOCUS_RING}`}
         >
           <ChevronRight size={18} aria-hidden="true" />
         </button>
@@ -148,7 +148,7 @@ export default function BookingCalendar({ selectedDate, onSelectDate }: BookingC
       </div>
 
       <p className="mt-6 flex items-center gap-2 text-xs text-primary/60">
-        <span aria-hidden="true" className="inline-block h-1 w-1 rounded-full bg-taupe" />
+        <span aria-hidden="true" className="inline-block h-1 w-1 rounded-full bg-accent" />
         Open dag. Zondagen en feestdagen zijn gesloten.
       </p>
     </div>

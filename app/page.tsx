@@ -1,188 +1,96 @@
 import type { ReactNode } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, Clock, Droplets, Paintbrush, Palette, Sparkles } from 'lucide-react';
+import { ArrowRight, Palette } from 'lucide-react';
 import NailCarouselShowcase from '@/components/NailCarouselShowcase';
-
-type Treatment = {
-  id: string;
-  title: string;
-  tagline: string;
-  icon: ReactNode;
-  price: string;
-  duration: string;
-  includes: readonly string[];
-};
-
-const TREATMENTS: readonly Treatment[] = [
-  {
-    id: 'biab',
-    title: 'BIAB & Natural Nail Treatment',
-    tagline: 'Versteviging van de natuurlijke nagel',
-    icon: <Droplets size={22} aria-hidden="true" />,
-    price: '€45',
-    duration: '60 – 75 min',
-    includes: [
-      'Nagelanalyse en voorbehandeling',
-      'Vijlen en nagelriemverzorging',
-      'BIAB-laag voor extra sterkte',
-      'Afwerking met verzorgende olie',
-    ],
-  },
-  {
-    id: 'gellak',
-    title: 'Gellak & Manicure',
-    tagline: 'Duurzame kleur met hoogglans',
-    icon: <Sparkles size={22} aria-hidden="true" />,
-    price: '€38',
-    duration: '45 – 60 min',
-    includes: [
-      'Manicure met nagelriemverzorging',
-      'Vormgeven van de nagels',
-      'Gellak in een kleur naar keuze',
-      'Hoogglans topcoat en olie',
-    ],
-  },
-  {
-    id: 'nail-art',
-    title: 'Custom Nail Art & Extensions',
-    tagline: 'Vormverlenging, handgetekende designs',
-    icon: <Paintbrush size={22} aria-hidden="true" />,
-    price: '€65',
-    duration: '90 – 120 min',
-    includes: [
-      'Persoonlijk intakegesprek over vorm en stijl',
-      'Verlenging op tip of vorm',
-      'Handgetekende designs en accenten',
-      'Finish met topcoat en olie',
-    ],
-  },
-] as const;
-
-const NAIL_SHAPES = [
-  { x: 37, height: 170, fill: '#FAF7F2' },
-  { x: 105, height: 205, fill: '#E8D5CE' },
-  { x: 173, height: 225, fill: '#D4B8A5' },
-  { x: 241, height: 205, fill: '#1C1917' },
-  { x: 309, height: 150, fill: '#E8D5CE' },
-] as const;
-
-const NAIL_WIDTH = 54;
-const NAIL_BASELINE = 400;
+import {
+  TREATMENT_CATEGORIES,
+  formatPrice,
+  type TreatmentCategory,
+  type TreatmentItem,
+} from '@/lib/treatments';
 
 const buttonBase =
   'inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-medium transition-all duration-200 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none motion-reduce:active:scale-100';
 
-function HeroVisual() {
-  return (
-    <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-gradient-to-br from-blush via-canvas to-taupe/70 shadow-[0_30px_60px_-30px_rgba(28,25,23,0.35)] ring-1 ring-taupe/30">
-        <svg
-          viewBox="0 0 400 500"
-          role="img"
-          aria-label="Illustratie van vijf nagels in zachte neutrale tinten"
-          className="absolute inset-0 h-full w-full"
-        >
-          <circle cx="200" cy="250" r="170" fill="#FFFFFF" opacity="0.45" />
-          {NAIL_SHAPES.map((nail) => (
-            <g key={nail.x}>
-              <rect
-                x={nail.x}
-                y={NAIL_BASELINE - nail.height}
-                width={NAIL_WIDTH}
-                height={nail.height}
-                rx={NAIL_WIDTH / 2}
-                fill={nail.fill}
-                stroke="#1C1917"
-                strokeOpacity="0.08"
-              />
-              <rect
-                x={nail.x + 12}
-                y={NAIL_BASELINE - nail.height + 18}
-                width="7"
-                height={nail.height * 0.45}
-                rx="3.5"
-                fill="#FFFFFF"
-                opacity="0.55"
-              />
-            </g>
-          ))}
-        </svg>
-      </div>
+function getStartingPrice(treatments: readonly TreatmentItem[]): number | null {
+  if (treatments.length === 0) return null;
+  return Math.min(...treatments.map((treatment) => treatment.priceEuro));
+}
 
-      <div className="absolute -bottom-5 left-6 flex items-center gap-3 rounded-2xl bg-card/90 px-5 py-4 shadow-[0_20px_40px_-24px_rgba(28,25,23,0.4)] ring-1 ring-taupe/30 backdrop-blur-md">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-white">
-          <Sparkles size={18} aria-hidden="true" />
-        </span>
-        <p className="text-sm leading-snug">
-          <span className="block font-semibold text-primary">Op maat gemaakt</span>
-          <span className="block text-primary/60">Vorm, kleur en finish</span>
-        </p>
+function TreatmentRow({ treatment }: { treatment: TreatmentItem }) {
+  return (
+    <li className="flex items-start justify-between gap-4 py-3">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-primary">{treatment.title}</p>
+        <p className="mt-0.5 truncate text-xs text-primary/65">{treatment.description}</p>
       </div>
-    </div>
+      <div className="shrink-0 text-right">
+        <p className="text-sm font-medium text-primary">{formatPrice(treatment.priceEuro)}</p>
+        <p className="text-xs text-primary/60">{treatment.durationMinutes} min</p>
+      </div>
+    </li>
   );
 }
 
-function TreatmentCard({ treatment }: { treatment: Treatment }) {
-  const headingId = `treatment-${treatment.id}`;
+function TreatmentCard({ category }: { category: TreatmentCategory }) {
+  const headingId = `treatment-${category.id}`;
+  const startingPrice = getStartingPrice(category.treatments);
 
   return (
-    <article
+    <Link
+      href={`/booking?category=${category.id}`}
       aria-labelledby={headingId}
-      className="flex h-full flex-col rounded-3xl bg-card p-8 shadow-[0_20px_40px_-30px_rgba(28,25,23,0.3)] ring-1 ring-taupe/25 transition-shadow duration-300 hover:ring-accent/40 hover:shadow-[0_28px_50px_-28px_rgba(28,25,23,0.4)] motion-reduce:transition-none"
+      className="group flex h-full flex-col overflow-hidden rounded-3xl bg-card shadow-[0_20px_40px_-30px_rgba(28,25,23,0.3)] ring-1 ring-taupe/25 transition-shadow duration-300 hover:ring-accent/40 hover:shadow-[0_28px_50px_-28px_rgba(28,25,23,0.4)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-taupe motion-reduce:transition-none"
     >
-      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-dark ring-1 ring-accent/20">
-        {treatment.icon}
-      </span>
-
-      <h3
-        id={headingId}
-        className="mt-6 font-display text-2xl font-bold leading-tight tracking-[-0.01em] text-stone-900"
-      >
-        {treatment.title}
-      </h3>
-      <p className="mt-2 text-sm leading-relaxed text-primary/65">{treatment.tagline}</p>
-
-      <div className="mt-6 flex items-end justify-between border-y border-taupe/30 py-5">
-        <p>
-          <span className="block text-xs uppercase tracking-[0.18em] text-primary/55">Vanaf</span>
-          <span className="font-serif text-4xl font-medium leading-none text-primary">
-            {treatment.price}
-          </span>
-        </p>
-        <p className="flex items-center gap-2 text-sm text-primary/70">
-          <Clock size={16} aria-hidden="true" />
-          {treatment.duration}
-        </p>
+      <div className="relative aspect-[4/3] w-full overflow-hidden">
+        <Image
+          src={category.image}
+          alt=""
+          fill
+          sizes="(min-width: 768px) 50vw, 100vw"
+          className="object-cover transition duration-500 group-hover:scale-[1.02] group-hover:blur-[1.5px] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-hover:blur-0"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 -bottom-px h-3/4 bg-gradient-to-b from-card/0 via-card/60 to-card"
+        />
       </div>
 
-      <div className="mt-6 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-          Inbegrepen
-        </p>
-        <ul className="mt-4 space-y-3 text-sm leading-relaxed text-primary/80">
-          {treatment.includes.map((item) => (
-            <li key={item} className="flex gap-3">
-              <Check size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-accent" />
-              <span>{item}</span>
-            </li>
+      <div className="relative z-10 -mt-14 flex flex-1 flex-col px-8 pb-8">
+        <h3
+          id={headingId}
+          className="font-serif text-2xl font-bold leading-tight tracking-[-0.01em] text-stone-900"
+        >
+          {category.title}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-primary/65">{category.subtitle}</p>
+
+        {startingPrice !== null && (
+          <p className="mt-5 flex items-baseline gap-3 border-t border-taupe/30 pt-5">
+            <span className="text-xs uppercase tracking-[0.18em] text-primary/55">Vanaf</span>
+            <span className="font-serif text-3xl font-medium leading-none text-primary">
+              {formatPrice(startingPrice)}
+            </span>
+          </p>
+        )}
+
+        <ul className="mt-4 flex-1 divide-y divide-taupe/25 border-t border-taupe/30">
+          {category.treatments.map((treatment) => (
+            <TreatmentRow key={treatment.id} treatment={treatment} />
           ))}
         </ul>
-      </div>
 
-      <a
-        href="#contact"
-        className="group mt-8 inline-flex items-center gap-2 self-start text-sm font-medium text-primary focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-taupe"
-      >
-        <span className="border-b border-primary/30 pb-0.5 transition-colors group-hover:border-accent group-hover:text-accent-dark">
+        <span className="mt-6 inline-flex items-center gap-2 self-start rounded-full bg-accent px-6 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 group-hover:bg-accent-dark group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none motion-reduce:group-active:scale-100">
           Boek deze behandeling
+          <ArrowRight
+            size={16}
+            aria-hidden="true"
+            className="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+          />
         </span>
-        <ArrowRight
-          size={16}
-          aria-hidden="true"
-          className="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
-        />
-      </a>
-    </article>
+      </div>
+    </Link>
   );
 }
 
@@ -193,24 +101,34 @@ export default function HomePage() {
       <section className="mx-auto max-w-7xl px-6 pb-24 pt-16 lg:px-8 lg:pb-32 lg:pt-20">
         <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-accent-dark">
           <span aria-hidden="true" className="h-px w-8 bg-accent" />
-          Nagelsalon · Opwijk
+          Beautysalon · Opwijk
         </p>
-        <h1 className="relative mt-4 max-w-full overflow-x-clip break-normal font-headline font-normal leading-[0.92] tracking-[-0.02em] text-stone-900">
-          <span className="block text-[length:clamp(2.75rem,9vw,8rem)]">Belise</span>
-          <span className="block pl-[0.12em] text-[length:clamp(2.75rem,9vw,8rem)] italic">
-            Manicure
-          </span>
-          <span className="-mt-[0.1em] block origin-left -rotate-2 font-script text-[length:clamp(3.5rem,11vw,10rem)] font-normal leading-none tracking-normal text-accent">
-            Opwijk
-          </span>
-        </h1>
+        <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
+          <h1 className="relative max-w-full overflow-x-clip break-normal font-serif font-bold leading-[0.85] tracking-[-0.03em] text-stone-900">
+            <span className="block text-[length:clamp(3.5rem,13vw,11rem)]">Belise</span>
+            <span className="-mt-2 block text-[length:clamp(2rem,7vw,6rem)] italic leading-none tracking-[0.02em] text-accent sm:-mt-5">
+              Beauty
+            </span>
+          </h1>
 
-        <div className="mt-10 grid items-center gap-16 lg:mt-10 lg:grid-cols-2 lg:gap-20">
-          <div>
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-[2rem] shadow-[0_30px_60px_-30px_rgba(28,25,23,0.35)] ring-1 ring-taupe/30 lg:max-w-none">
+            <Image
+              src="/assets/front/Clean%20front%20picture.jpg"
+              alt="Zaakvoerder van Belise"
+              fill
+              priority
+              sizes="(min-width: 1024px) 40vw, 90vw"
+              className="object-cover"
+            />
+          </div>
+        </div>
+
+        <div className="mt-14 lg:mt-16">
+          <div className="max-w-2xl">
             <p className="max-w-lg text-base leading-relaxed text-primary/70 sm:text-lg">
-              Bij Belise nemen we de tijd voor jouw nagels. Van versterkende behandelingen tot
-              handgetekende nail art: elke set wordt afgestemd op je handen, je stijl en je
-              dagelijkse leven.
+              Bij Belise nemen we de tijd voor jou. Van make-up en haarstyling tot nagelverzorging
+              voor handen en voeten: elke behandeling wordt afgestemd op jouw stijl en je dagelijkse
+              leven.
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
@@ -222,15 +140,13 @@ export default function HomePage() {
                 Ontwerp je nagels
               </Link>
               <a
-                href="#contact"
+                href="/booking"
                 className={`${buttonBase} border border-primary/25 text-primary hover:border-primary hover:bg-blush/50`}
               >
                 Boek behandeling
               </a>
             </div>
           </div>
-
-          <HeroVisual />
         </div>
       </section>
 
@@ -244,10 +160,8 @@ export default function HomePage() {
               <span aria-hidden="true" className="h-px w-8 bg-accent" />
               Behandelingen & prijzen
             </p>
-            <h2 className="mt-4 font-headline font-normal leading-[1] tracking-[-0.02em] text-stone-900 text-4xl sm:text-5xl lg:text-6xl">
-              Zorg die past bij{' '}
-              <span className="font-script text-[1.25em] leading-none text-primary/80">jouw</span>{' '}
-              nagels
+            <h2 className="mt-4 font-serif font-normal leading-[1] tracking-[-0.02em] text-stone-900 text-4xl sm:text-5xl lg:text-6xl">
+              Zorg die bij <span className="italic text-primary/80">jou</span> past
             </h2>
             <p className="mt-6 text-base leading-relaxed text-primary/70">
               Kies een behandeling als vertrekpunt. De prijzen zijn richtprijzen. De definitieve
@@ -255,9 +169,9 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div id="tarieven" className="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {TREATMENTS.map((treatment) => (
-              <TreatmentCard key={treatment.id} treatment={treatment} />
+          <div id="tarieven" className="mt-14 grid gap-8 md:grid-cols-2">
+            {TREATMENT_CATEGORIES.map((category) => (
+              <TreatmentCard key={category.id} category={category} />
             ))}
           </div>
         </div>
@@ -281,9 +195,9 @@ export default function HomePage() {
                 <Palette size={16} aria-hidden="true" />
                 Nagel Designer
               </p>
-              <h2 className="mt-5 font-headline font-normal leading-[1] tracking-[-0.02em] text-4xl sm:text-5xl lg:text-6xl">
+              <h2 className="mt-5 font-serif font-normal leading-[1] tracking-[-0.02em] text-4xl sm:text-5xl lg:text-6xl">
                 Twijfel je over{' '}
-                <span className="font-script text-[1.25em] leading-none text-taupe">vorm</span>{' '}
+                <span className="italic text-taupe">vorm</span>{' '}
                 of kleur?
               </h2>
               <p className="mt-6 text-base leading-relaxed text-canvas/75 sm:text-lg">

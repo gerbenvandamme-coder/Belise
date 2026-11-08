@@ -13,11 +13,27 @@ const NAV_LINKS = [
   { label: 'Contact', href: '/#contact' },
 ] as const;
 
-const CTA_HREF = '/#contact';
+const CTA_HREF = '/booking';
 const CTA_LABEL = 'Afspraak Maken';
 
 const FOCUS_RING =
   'focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent';
+
+// Mobiel menu: paneel schuift in 280ms naar beneden (ease-out expo) en sluit in 200ms.
+// De items lopen daarna in een cascade: eerste item na 40ms, daarna +30ms per item.
+// Laatste item (CTA) start na 190ms en duurt 220ms, dus het hele menu staat binnen ~410ms.
+const ITEM_STAGGER_START_MS = 40;
+const ITEM_STAGGER_STEP_MS = 30;
+
+const PANEL_BASE =
+  'absolute inset-x-0 top-full max-h-[calc(100dvh-5.5rem)] origin-top overflow-y-auto border-t border-taupe/30 bg-card shadow-lg transition-[transform,opacity,visibility] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:translate-y-0 lg:hidden';
+const PANEL_OPEN = 'visible translate-y-0 opacity-100 duration-[280ms]';
+const PANEL_CLOSED = 'pointer-events-none invisible -translate-y-5 opacity-0 duration-200';
+
+const ITEM_BASE =
+  'transition-[transform,opacity] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:translate-y-0';
+const ITEM_OPEN = 'translate-y-0 opacity-100 duration-[220ms]';
+const ITEM_CLOSED = 'translate-y-2.5 opacity-0 duration-150';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +41,12 @@ export default function Navbar() {
 
   const closeMenu = () => setIsOpen(false);
   const isActive = (href: string) => href === pathname;
+
+  // Alleen bij openen een vertraging; bij sluiten verdwijnt alles meteen samen met het paneel.
+  const itemStyle = (index: number) => ({
+    transitionDelay: isOpen ? `${ITEM_STAGGER_START_MS + index * ITEM_STAGGER_STEP_MS}ms` : '0ms',
+  });
+  const itemState = isOpen ? ITEM_OPEN : ITEM_CLOSED;
 
   return (
     <header className="sticky top-0 z-50 border-b border-taupe/30 bg-canvas/80 backdrop-blur-md">
@@ -90,38 +112,47 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {isOpen && (
-        <div id="mobile-menu" className="border-t border-taupe/30 bg-card lg:hidden">
-          <ul className="flex flex-col px-6 py-2">
-            {NAV_LINKS.map((link) => {
-              const active = isActive(link.href);
-              return (
-                <li key={link.href} className="border-b border-taupe/20 last:border-b-0">
-                  <Link
-                    href={link.href}
-                    onClick={closeMenu}
-                    aria-current={active ? 'page' : undefined}
-                    className={`block py-4 text-base font-medium transition-colors hover:text-accent ${
-                      active ? 'text-accent-dark' : 'text-primary'
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="px-6 pb-6">
-            <Link
-              href={CTA_HREF}
-              onClick={closeMenu}
-              className="flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-canvas shadow-sm transition-transform active:scale-[0.97]"
-            >
-              {CTA_LABEL}
-            </Link>
-          </div>
+      <div
+        id="mobile-menu"
+        className={`${PANEL_BASE} ${isOpen ? PANEL_OPEN : PANEL_CLOSED}`}
+        style={{ willChange: 'transform, opacity' }}
+      >
+        <ul className="flex flex-col px-6 py-2">
+          {NAV_LINKS.map((link, index) => {
+            const active = isActive(link.href);
+            return (
+              <li
+                key={link.href}
+                style={itemStyle(index)}
+                className={`border-b border-taupe/20 last:border-b-0 ${ITEM_BASE} ${itemState}`}
+              >
+                <Link
+                  href={link.href}
+                  onClick={closeMenu}
+                  aria-current={active ? 'page' : undefined}
+                  className={`block py-4 text-base font-medium transition-colors hover:text-accent ${
+                    active ? 'text-accent-dark' : 'text-primary'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+        <div
+          style={itemStyle(NAV_LINKS.length)}
+          className={`px-6 pb-6 ${ITEM_BASE} ${itemState}`}
+        >
+          <Link
+            href={CTA_HREF}
+            onClick={closeMenu}
+            className="flex w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-canvas shadow-sm transition-transform active:scale-[0.97]"
+          >
+            {CTA_LABEL}
+          </Link>
         </div>
-      )}
+      </div>
     </header>
   );
 }

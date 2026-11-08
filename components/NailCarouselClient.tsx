@@ -162,7 +162,7 @@ export default function NailCarouselClient({ items }: Props) {
         </p>
         <h2
           id="carousel-heading"
-          className="mt-4 font-headline font-normal leading-[1] tracking-[-0.02em] text-stone-900 text-4xl sm:text-5xl lg:text-6xl"
+          className="mt-4 font-serif font-normal leading-[1] tracking-[-0.02em] text-stone-900 text-4xl sm:text-5xl lg:text-6xl"
         >
           Recente sets
         </h2>
@@ -182,7 +182,7 @@ export default function NailCarouselClient({ items }: Props) {
           >
             <motion.span
               style={reduceMotion ? undefined : { x: backgroundX }}
-              className="whitespace-nowrap font-display font-black uppercase leading-none tracking-tighter text-stone-900/[0.04] text-[18vw]"
+              className="whitespace-nowrap font-serif font-bold uppercase leading-none tracking-tighter text-stone-900/[0.04] text-[18vw]"
             >
               Belise
             </motion.span>
