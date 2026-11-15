@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { isClosedDay, startOfDay, toDateKey } from '@/lib/schedule';
+import { startOfDay, toDateKey } from '@/lib/schedule';
+import { isDayOpen, type OpenDays } from '@/lib/whitelist';
 
 const WEEKDAY_LABELS = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'] as const;
 const MONTH_FORMATTER = new Intl.DateTimeFormat('nl-BE', { month: 'long', year: 'numeric' });
@@ -15,9 +16,6 @@ const DAY_FORMATTER = new Intl.DateTimeFormat('nl-BE', {
 
 const FOCUS_RING =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
-
-// TimeSlotPicker importeert deze helpers nog via dit bestand.
-export { startOfDay, toDateKey };
 
 /** Maakt een raster van zeven kolommen (maandag eerst). Lege cellen zijn null. */
 function buildMonthGrid(month: Date): (Date | null)[] {
@@ -71,9 +69,17 @@ function DayButton({ date, selected, disabled, onSelect }: DayButtonProps) {
 type BookingCalendarProps = {
   selectedDate: Date | null;
   onSelectDate: (date: Date) => void;
+  /** Whitelist uit Supabase. Dagen die hier niet in staan, zijn niet klikbaar. */
+  openDays: OpenDays;
+  loadError?: string | null;
 };
 
-export default function BookingCalendar({ selectedDate, onSelectDate }: BookingCalendarProps) {
+export default function BookingCalendar({
+  selectedDate,
+  onSelectDate,
+  openDays,
+  loadError = null,
+}: BookingCalendarProps) {
   const today = startOfDay(new Date());
   const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -134,7 +140,7 @@ export default function BookingCalendar({ selectedDate, onSelectDate }: BookingC
         {cells.map((date, index) => {
           if (!date) return <span key={`blank-${index}`} aria-hidden="true" />;
 
-          const disabled = date < today || isClosedDay(date);
+          const disabled = date < today || !isDayOpen(date, openDays);
           return (
             <DayButton
               key={toDateKey(date)}
@@ -149,7 +155,7 @@ export default function BookingCalendar({ selectedDate, onSelectDate }: BookingC
 
       <p className="mt-6 flex items-center gap-2 text-xs text-primary/60">
         <span aria-hidden="true" className="inline-block h-1 w-1 rounded-full bg-accent" />
-        Open dag. Zondagen en feestdagen zijn gesloten.
+        {loadError ?? 'Open dag. Alle andere dagen zijn gesloten.'}
       </p>
     </div>
   );
