@@ -1,20 +1,10 @@
-import type { ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Palette } from 'lucide-react';
 import NailCarouselShowcase from '@/components/NailCarouselShowcase';
 import Ornament from '@/components/Ornament';
-import {
-  TREATMENT_CATEGORIES,
-  visibleCategories,
-  formatDurationRange,
-  formatPrice,
-  formatPriceRange,
-  getDurationRange,
-  getPriceRange,
-  type TreatmentCategory,
-  type TreatmentItem,
-} from '@/lib/treatments';
+import TreatmentMenu from '@/components/TreatmentMenu';
+import { TREATMENT_CATEGORIES, visibleCategories } from '@/lib/treatments';
 import { fetchTreatmentCategories } from '@/lib/services';
 import { createPublicSupabase } from '@/lib/supabasePublic';
 
@@ -22,118 +12,7 @@ import { createPublicSupabase } from '@/lib/supabasePublic';
 export const revalidate = 60;
 
 const buttonBase =
-  'inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-medium transition-all duration-200 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none motion-reduce:active:scale-100';
-
-function getStartingPrice(treatments: readonly TreatmentItem[]): number | null {
-  if (treatments.length === 0) return null;
-  return Math.min(...treatments.map((treatment) => getPriceRange(treatment).min));
-}
-
-function groupTreatments(treatments: readonly TreatmentItem[]) {
-  const groups = new Map<string, TreatmentItem[]>();
-  for (const treatment of treatments) {
-    const key = treatment.group ?? '';
-    groups.set(key, [...(groups.get(key) ?? []), treatment]);
-  }
-  return Array.from(groups, ([label, items]) => ({ label, items }));
-}
-
-function TreatmentRow({ treatment }: { treatment: TreatmentItem }) {
-  const price = getPriceRange(treatment);
-  const duration = getDurationRange(treatment);
-
-  return (
-    <li className="flex items-start justify-between gap-4 py-3">
-      <p className="min-w-0 text-sm font-medium text-primary">{treatment.title}</p>
-      <div className="shrink-0 text-right">
-        <p className="text-sm font-medium text-primary">
-          {formatPriceRange(price.min, price.max)}
-        </p>
-        <p className="text-xs text-primary/60">
-          {formatDurationRange(duration.min, duration.max)}
-        </p>
-      </div>
-    </li>
-  );
-}
-
-function TreatmentCard({ category }: { category: TreatmentCategory }) {
-  const headingId = `treatment-${category.id}`;
-  const startingPrice = getStartingPrice(category.treatments);
-
-  return (
-    <Link
-      href={`/booking?category=${category.id}`}
-      aria-labelledby={headingId}
-      className="reveal shadow-luxe ease-luxe group flex h-full flex-col overflow-hidden rounded-3xl bg-card ring-1 ring-taupe/25 transition-[transform,box-shadow] duration-500 hover:-translate-y-1 hover:ring-taupe/50 hover:shadow-luxe-lg motion-reduce:hover:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-taupe motion-reduce:transition-none"
-    >
-      {category.image ? (
-      <div className="relative aspect-[4/3] w-full overflow-hidden">
-        <Image
-          src={category.image}
-          alt=""
-          fill
-          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-          className="object-cover transition duration-500 group-hover:scale-[1.02] group-hover:blur-[1.5px] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-hover:blur-0"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 -bottom-px h-3/4 bg-gradient-to-b from-card/0 via-card/60 to-card"
-        />
-      </div>
-      ) : (
-        <div aria-hidden="true" className="h-8" />
-      )}
-
-      <div
-        className={`relative z-10 flex flex-1 flex-col px-8 pb-8 ${category.image ? '-mt-14' : ''}`}
-      >
-        <h3
-          id={headingId}
-          className="font-serif text-2xl font-semibold leading-tight tracking-[-0.01em] text-stone-900"
-        >
-          {category.title}
-        </h3>
-        <p className="mt-2 text-sm leading-relaxed text-primary/65">{category.subtitle}</p>
-
-        {startingPrice !== null && (
-          <p className="mt-5 flex items-baseline gap-3 border-t border-taupe/30 pt-5">
-            <span className="text-xs uppercase tracking-[0.18em] text-primary/55">Vanaf</span>
-            <span className="font-serif text-3xl font-medium leading-none text-primary">
-              {formatPrice(startingPrice)}
-            </span>
-          </p>
-        )}
-
-        <div className="mt-4 flex-1 space-y-5 border-t border-taupe/30 pt-4">
-          {groupTreatments(category.treatments).map(({ label, items }) => (
-            <section key={label || 'overig'}>
-              {label && (
-                <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-dark">
-                  {label}
-                </h4>
-              )}
-              <ul className="divide-y divide-taupe/25">
-                {items.map((treatment) => (
-                  <TreatmentRow key={treatment.id} treatment={treatment} />
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
-
-        <span className="mt-6 inline-flex items-center gap-2 self-start rounded-full bg-accent px-6 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 group-hover:bg-accent-dark group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none motion-reduce:group-active:scale-100">
-          Boek deze behandeling
-          <ArrowRight
-            size={16}
-            aria-hidden="true"
-            className="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
-          />
-        </span>
-      </div>
-    </Link>
-  );
-}
+  'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[13px] font-medium transition-all duration-200 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none motion-reduce:active:scale-100';
 
 export default async function HomePage() {
   const client = createPublicSupabase();
@@ -144,12 +23,12 @@ export default async function HomePage() {
   return (
     <main id="top" className="flex-1">
       {/* Hero */}
-      <section className="mx-auto max-w-7xl px-6 pb-24 pt-16 lg:px-8 lg:pb-32 lg:pt-20">
+      <section className="mx-auto max-w-7xl px-6 pb-16 pt-12 lg:px-8 lg:pb-20 lg:pt-16">
         <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-accent-dark">
           <span aria-hidden="true" className="h-px w-8 bg-accent" />
           Beautysalon · Opwijk
         </p>
-        <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
+        <div className="grid items-center gap-10 lg:grid-cols-[1.3fr_1fr] lg:gap-16">
           <h1 className="relative max-w-full overflow-x-clip break-normal font-serif font-medium leading-[0.85] tracking-[-0.03em] text-stone-900">
             <span className="block text-[length:clamp(3.5rem,13vw,11rem)]">Belise</span>
             <span className="mt-1 block text-[length:clamp(2rem,7vw,6rem)] italic leading-none tracking-[0.02em] text-accent sm:mt-0">
@@ -157,7 +36,7 @@ export default async function HomePage() {
             </span>
           </h1>
 
-          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+          <figure className="relative mx-auto w-full max-w-[19rem] sm:max-w-sm lg:ml-auto lg:mr-6 lg:max-w-[22rem]">
             {/* Verschoven kaderlijn achter de foto */}
             <div
               aria-hidden="true"
@@ -177,10 +56,15 @@ export default async function HomePage() {
                 className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/40"
               />
             </div>
-          </div>
+            <figcaption className="mt-8 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-primary/55">
+              <span aria-hidden="true" className="hairline h-px flex-1" />
+              Jouw beauty-adres in Opwijk
+              <span aria-hidden="true" className="hairline h-px flex-1" />
+            </figcaption>
+          </figure>
         </div>
 
-        <div className="mt-14 lg:mt-16">
+        <div className="mt-10 lg:mt-12">
           <div className="max-w-2xl">
             <p className="max-w-lg text-base leading-relaxed text-primary/70 sm:text-lg">
               Bij Belise nemen we de tijd voor jou. Van nagels en ontharing tot snit, kleur en
@@ -203,6 +87,21 @@ export default async function HomePage() {
                 Boek behandeling
               </a>
             </div>
+
+            <ul className="mt-10 grid max-w-lg grid-cols-3 divide-x divide-taupe/40 border-y border-taupe/30 py-4 text-center">
+              {[
+                ['Op afspraak', 'Persoonlijke aandacht'],
+                ['Online boeken', 'Wanneer het jou past'],
+                ['Opwijk', 'Nanovestraat 71'],
+              ].map(([title, detail]) => (
+                <li key={title} className="px-3">
+                  <span className="block font-serif text-base italic text-primary">{title}</span>
+                  <span className="mt-1 block text-[10px] uppercase tracking-[0.16em] text-primary/50">
+                    {detail}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
@@ -212,7 +111,7 @@ export default async function HomePage() {
       <NailCarouselShowcase />
 
       {/* Behandelingen & Prijzen */}
-      <section id="behandelingen" className="relative bg-blush/30 py-24 lg:py-32">
+      <section id="behandelingen" className="relative bg-blush/30 py-16 lg:py-24">
         <div aria-hidden="true" className="hairline absolute inset-x-0 top-0 h-px" />
         <div aria-hidden="true" className="hairline absolute inset-x-0 bottom-0 h-px" />
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -224,28 +123,23 @@ export default async function HomePage() {
             <h2 className="mt-4 font-serif font-normal leading-[1] tracking-[-0.02em] text-stone-900 text-4xl sm:text-5xl lg:text-6xl">
               Zorg die bij <span className="italic text-primary/80">jou</span> past
             </h2>
-            <p className="mt-6 text-base leading-relaxed text-primary/70">
-              Kies een behandeling als vertrekpunt. De prijzen zijn richtprijzen. De definitieve
+            <p className="mt-5 text-[15px] leading-relaxed text-primary/70">
+              Klap een categorie open en kies een behandeling als vertrekpunt. De prijzen zijn richtprijzen. De definitieve
               prijs hangt af van lengte, design en eventuele verwijdering van een oude set.
             </p>
           </div>
 
-          <div
-            id="tarieven"
-            className={`mt-14 grid gap-8 md:grid-cols-2 ${
-              categories.length === 4 ? 'xl:grid-cols-4' : 'lg:grid-cols-3'
-            }`}
-          >
-            {categories.map((category) => (
-              <TreatmentCard key={category.id} category={category} />
-            ))}
+          <div id="tarieven">
+            <TreatmentMenu categories={categories} />
           </div>
         </div>
       </section>
 
+      <Ornament className="px-6 pt-16 lg:pt-20" />
+
       {/* Teaser Nagel Designer */}
-      <section id="nagel-designer" className="mx-auto max-w-7xl px-6 py-24 lg:px-8 lg:py-32">
-        <div className="reveal shadow-luxe-lg relative overflow-hidden rounded-[2rem] bg-primary px-8 py-16 text-canvas sm:px-14 lg:px-20 lg:py-20">
+      <section id="nagel-designer" className="mx-auto max-w-7xl px-6 pb-16 pt-10 lg:px-8 lg:pb-24 lg:pt-12">
+        <div className="reveal shadow-luxe-lg relative overflow-hidden rounded-[2rem] bg-primary px-8 py-12 text-canvas sm:px-12 lg:px-16 lg:py-14">
           {/* Fijne binnenkader */}
           <div
             aria-hidden="true"

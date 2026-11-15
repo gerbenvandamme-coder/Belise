@@ -11,7 +11,7 @@ export default function Footer() {
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent"
       />
-      <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-3 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-3 lg:px-8">
         <div>
           <p className="font-serif text-2xl font-semibold tracking-[0.2em] text-primary">
             {SALON.name}

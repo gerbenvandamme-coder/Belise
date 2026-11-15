@@ -3,11 +3,6 @@
 @tailwind utilities;
 
 @layer components {
-  /* Bodoni Moda: laat de browser de optische grootte kiezen (fijner contrast bij grote koppen). */
-  .font-serif {
-    font-optical-sizing: auto;
-  }
-
   /* Dunne champagne-lijn die naar de uiteinden toe vervaagt. */
   .hairline {
     background: linear-gradient(90deg, transparent, rgba(212, 184, 165, 0.9), transparent);

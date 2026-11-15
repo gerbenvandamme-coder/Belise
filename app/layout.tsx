@@ -1,18 +1,16 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Bodoni_Moda, Plus_Jakarta_Sans } from 'next/font/google';
+import { Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MarbleBackground from '@/components/MarbleBackground';
 import './globals.css';
 
-// Bodoni Moda: klassieke luxe-serif met hoog contrast. Variabel lettertype; de opsz-as maakt
-// de haarlijnen bij kleine tekst iets steviger, zodat koppen ook op mobiel leesbaar blijven.
-const serif = Bodoni_Moda({
+// Playfair Display: elegante, warme luxe-serif met echte cursief. Variabel gewicht (400-900).
+const serif = Playfair_Display({
   subsets: ['latin'],
   style: ['normal', 'italic'],
-  axes: ['opsz'],
   variable: '--font-serif',
   display: 'swap',
 });
@@ -37,7 +35,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="nl" className={`${serif.variable} ${sans.variable}`}>
-      <body className="flex min-h-screen flex-col bg-canvas font-sans text-primary antialiased">
+      <body className="flex min-h-screen flex-col overflow-x-clip bg-canvas font-sans text-primary antialiased">
         <MarbleBackground />
         <AnnouncementBanner />
         <Navbar />

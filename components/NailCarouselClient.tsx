@@ -154,7 +154,7 @@ export default function NailCarouselClient({ items }: Props) {
   return (
     <section
       aria-labelledby="carousel-heading"
-      className="overflow-hidden bg-canvas py-24 lg:py-32"
+      className="overflow-hidden bg-canvas py-16 lg:py-24"
     >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary/55">
@@ -174,7 +174,7 @@ export default function NailCarouselClient({ items }: Props) {
           aria-label="Nagelsets"
           tabIndex={0}
           onKeyDown={handleKeyDown}
-          className="relative mt-14 h-[min(70vh,34rem)] min-h-[22rem] touch-pan-y select-none rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-taupe"
+          className="relative mt-10 h-[min(58vh,28rem)] min-h-[18rem] touch-pan-y select-none rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-taupe"
         >
           <div
             aria-hidden="true"
@@ -209,7 +209,7 @@ export default function NailCarouselClient({ items }: Props) {
                   style={{ zIndex: pose.zIndex }}
                 >
                   <motion.div
-                    className="w-[min(56vw,20rem)] will-change-transform"
+                    className="w-[min(46vw,16rem)] will-change-transform"
                     initial={false}
                     animate={{
                       x: pose.x,
@@ -261,7 +261,7 @@ export default function NailCarouselClient({ items }: Props) {
             type="button"
             onClick={goPrev}
             aria-label="Vorige set"
-            className="absolute left-2 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200/60 bg-white/80 text-stone-900 shadow-sm backdrop-blur transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-taupe md:flex"
+            className="absolute left-2 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200/60 bg-white/80 text-stone-900 shadow-sm backdrop-blur transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-taupe md:flex"
           >
             <ChevronLeft size={20} aria-hidden="true" />
           </button>
@@ -269,7 +269,7 @@ export default function NailCarouselClient({ items }: Props) {
             type="button"
             onClick={goNext}
             aria-label="Volgende set"
-            className="absolute right-2 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200/60 bg-white/80 text-stone-900 shadow-sm backdrop-blur transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-taupe md:flex"
+            className="absolute right-2 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200/60 bg-white/80 text-stone-900 shadow-sm backdrop-blur transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-taupe md:flex"
           >
             <ChevronRight size={20} aria-hidden="true" />
           </button>
