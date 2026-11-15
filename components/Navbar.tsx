@@ -3,19 +3,21 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, type MouseEvent } from 'react';
-import { Menu, X } from 'lucide-react';
+import { useEffect, useState, type MouseEvent } from 'react';
+import { Menu, UserRound, X } from 'lucide-react';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
+// Elke link gaat naar een eigen pagina. Behandelingen en tarieven staan samen op /behandelingen.
 const NAV_LINKS = [
-  { label: 'Behandelingen', href: '/#behandelingen' },
-  { label: 'Nagel Designer', href: '/designer' },
-  { label: 'Portfolio', href: '/#portfolio' },
-  { label: 'Tarieven', href: '/#tarieven' },
-  { label: 'Contact', href: '/#contact' },
+  { label: 'Behandelingen', href: '/behandelingen' },
+  { label: 'Portfolio', href: '/portfolio' },
+  { label: 'Nageldesigner', href: '/designer' },
+  { label: 'Contact', href: '/contact' },
 ] as const;
 
 const CTA_HREF = '/booking';
-const CTA_LABEL = 'Afspraak Maken';
+const CTA_LABEL = 'Afspraak maken';
+const ACCOUNT_HREF = '/account';
 
 const FOCUS_RING =
   'focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent';
@@ -38,7 +40,20 @@ const ITEM_CLOSED = 'translate-y-2.5 opacity-0 duration-150';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const pathname = usePathname();
+
+  // Toont of de bezoeker ingelogd is (icoon met stip, label 'Mijn account').
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(Boolean(session));
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  const accountLabel = signedIn ? 'Mijn account' : 'Inloggen of registreren';
 
   const closeMenu = () => setIsOpen(false);
 
@@ -51,7 +66,7 @@ export default function Navbar() {
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     if (window.location.hash) window.history.replaceState(null, '', '/');
   };
-  const isActive = (href: string) => href === pathname;
+  const isActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
 
   // Alleen bij openen een vertraging; bij sluiten verdwijnt alles meteen samen met het paneel.
   const itemStyle = (index: number) => ({
@@ -110,7 +125,27 @@ export default function Navbar() {
           })}
         </ul>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href={ACCOUNT_HREF}
+            aria-label={accountLabel}
+            title={accountLabel}
+            aria-current={isActive(ACCOUNT_HREF) ? 'page' : undefined}
+            className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors duration-200 ${FOCUS_RING} ${
+              isActive(ACCOUNT_HREF)
+                ? 'border-accent/40 bg-accent-soft text-accent-dark'
+                : 'border-taupe/50 text-primary/80 hover:border-accent/40 hover:bg-accent-soft hover:text-accent-dark'
+            }`}
+          >
+            <UserRound size={18} aria-hidden="true" />
+            {signedIn && (
+              <span
+                aria-hidden="true"
+                className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent ring-2 ring-canvas"
+              />
+            )}
+          </Link>
+
           <Link
             href={CTA_HREF}
             className="hidden rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-canvas shadow-sm transition-all duration-200 hover:bg-accent hover:shadow-md active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 lg:inline-flex"
@@ -161,8 +196,16 @@ export default function Navbar() {
         </ul>
         <div
           style={itemStyle(NAV_LINKS.length)}
-          className={`px-6 pb-6 ${ITEM_BASE} ${itemState}`}
+          className={`flex flex-col gap-3 px-6 pb-6 ${ITEM_BASE} ${itemState}`}
         >
+          <Link
+            href={ACCOUNT_HREF}
+            onClick={closeMenu}
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-taupe/60 px-6 py-3 text-sm font-medium text-primary transition-colors hover:bg-accent-soft"
+          >
+            <UserRound size={16} aria-hidden="true" />
+            {signedIn ? 'Mijn account' : 'Inloggen / registreren'}
+          </Link>
           <Link
             href={CTA_HREF}
             onClick={closeMenu}

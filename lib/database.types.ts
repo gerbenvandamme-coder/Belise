@@ -90,6 +90,30 @@ export type SiteSettingRow = {
   updated_at: string;
 };
 
+export type PortfolioCategoryId = 'nails' | 'waxing' | 'hair' | 'massage';
+
+export type PortfolioItemRow = {
+  id: string;
+  category_id: PortfolioCategoryId;
+  image_path: string;
+  title: string | null;
+  tags: string[];
+  sort_order: number;
+  is_published: boolean;
+  created_at: string;
+};
+
+export type MessageStatus = 'new' | 'read' | 'answered';
+
+export type MessageRow = {
+  id: string;
+  client_id: string;
+  subject: string;
+  body: string;
+  status: MessageStatus;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -121,6 +145,18 @@ export type Database = {
         Row: SiteSettingRow;
         Insert: Pick<SiteSettingRow, 'key'> & Partial<SiteSettingRow>;
         Update: Partial<SiteSettingRow>;
+        Relationships: [];
+      };
+      portfolio_items: {
+        Row: PortfolioItemRow;
+        Insert: Pick<PortfolioItemRow, 'category_id' | 'image_path'> & Partial<PortfolioItemRow>;
+        Update: Partial<PortfolioItemRow>;
+        Relationships: [];
+      };
+      messages: {
+        Row: MessageRow;
+        Insert: Pick<MessageRow, 'subject' | 'body'>;
+        Update: Pick<MessageRow, 'status'>;
         Relationships: [];
       };
       bookings: {

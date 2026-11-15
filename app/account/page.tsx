@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { safeNextPath } from '@/lib/authRedirect';
+import ProfileEditor from '@/components/ProfileEditor';
 
 type Mode = 'login' | 'register';
 
@@ -175,20 +176,49 @@ function AccountFlow() {
   }
 
   if (session.status === 'in') {
+    const tiles = [
+      { href: '/account/mijn-afspraken', title: 'Mijn afspraken', detail: 'Aankomend en eerder' },
+      {
+        href: returnsToBooking ? next : '/booking',
+        title: returnsToBooking ? 'Verder boeken' : 'Nieuwe afspraak',
+        detail: 'Kies een vrij moment',
+      },
+      { href: '/contact#bericht', title: 'Berichten', detail: 'Stuur Belise een vraag' },
+    ];
     return (
-      <main className="mx-auto w-full max-w-md flex-1 px-6 py-16 lg:py-24">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 lg:py-16">
         {backLink}
-        <h1 className={`mt-8 ${SECTION_HEADING}`}>Mijn account</h1>
-        <p className="mt-6 text-base leading-relaxed text-primary/70">
-          Je bent ingelogd als <span className="font-medium text-primary">{session.email}</span>.
+        <p className="mt-8 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-accent-dark">
+          <span aria-hidden="true" className="h-px w-8 bg-accent" />
+          Account
         </p>
-        <div className="mt-8 flex flex-col gap-3">
-          <Link href="/account/mijn-afspraken" className={SECONDARY_LINK}>
-            Mijn afspraken
-          </Link>
-          <Link href={returnsToBooking ? next : '/booking'} className={SECONDARY_LINK}>
-            {returnsToBooking ? 'Verder met mijn boeking' : 'Nieuwe afspraak maken'}
-          </Link>
+        <h1 className={`mt-4 ${SECTION_HEADING}`}>Mijn account</h1>
+        <p className="mt-4 text-[15px] leading-relaxed text-primary/70">
+          Ingelogd als <span className="font-medium text-primary">{session.email}</span>.
+        </p>
+
+        <ul className="mt-8 grid gap-3 sm:grid-cols-3">
+          {tiles.map((tile) => (
+            <li key={tile.title}>
+              <Link
+                href={tile.href}
+                className={`shadow-luxe ease-luxe group flex h-full flex-col rounded-[1.5rem] bg-card p-5 ring-1 ring-taupe/25 transition-[transform,box-shadow] duration-500 hover:-translate-y-0.5 hover:shadow-luxe-lg ${FOCUS_RING}`}
+              >
+                <span className="font-serif text-xl text-stone-900">{tile.title}</span>
+                <span className="mt-1 text-[13px] text-primary/60">{tile.detail}</span>
+                <span aria-hidden="true" className="mt-4 text-accent transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        <section className="shadow-luxe mt-8 rounded-[1.75rem] bg-card p-6 ring-1 ring-taupe/25 sm:p-8" aria-labelledby="gegevens-heading">
+          <h2 id="gegevens-heading" className="font-serif text-2xl text-stone-900">Mijn gegevens</h2>
+          <div aria-hidden="true" className="hairline my-5 h-px" />
+          <ProfileEditor />
+        </section>
+
+        <div className="mt-8 flex justify-center">
           <button
             type="button"
             onClick={handleSignOut}
