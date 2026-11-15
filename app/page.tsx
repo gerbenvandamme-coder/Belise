@@ -5,7 +5,11 @@ import { ArrowRight, Palette } from 'lucide-react';
 import NailCarouselShowcase from '@/components/NailCarouselShowcase';
 import {
   TREATMENT_CATEGORIES,
+  formatDurationRange,
   formatPrice,
+  formatPriceRange,
+  getDurationRange,
+  getPriceRange,
   type TreatmentCategory,
   type TreatmentItem,
 } from '@/lib/treatments';
@@ -15,19 +19,32 @@ const buttonBase =
 
 function getStartingPrice(treatments: readonly TreatmentItem[]): number | null {
   if (treatments.length === 0) return null;
-  return Math.min(...treatments.map((treatment) => treatment.priceEuro));
+  return Math.min(...treatments.map((treatment) => getPriceRange(treatment).min));
+}
+
+function groupTreatments(treatments: readonly TreatmentItem[]) {
+  const groups = new Map<string, TreatmentItem[]>();
+  for (const treatment of treatments) {
+    const key = treatment.group ?? '';
+    groups.set(key, [...(groups.get(key) ?? []), treatment]);
+  }
+  return Array.from(groups, ([label, items]) => ({ label, items }));
 }
 
 function TreatmentRow({ treatment }: { treatment: TreatmentItem }) {
+  const price = getPriceRange(treatment);
+  const duration = getDurationRange(treatment);
+
   return (
     <li className="flex items-start justify-between gap-4 py-3">
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-primary">{treatment.title}</p>
-        <p className="mt-0.5 truncate text-xs text-primary/65">{treatment.description}</p>
-      </div>
+      <p className="min-w-0 text-sm font-medium text-primary">{treatment.title}</p>
       <div className="shrink-0 text-right">
-        <p className="text-sm font-medium text-primary">{formatPrice(treatment.priceEuro)}</p>
-        <p className="text-xs text-primary/60">{treatment.durationMinutes} min</p>
+        <p className="text-sm font-medium text-primary">
+          {formatPriceRange(price.min, price.max)}
+        </p>
+        <p className="text-xs text-primary/60">
+          {formatDurationRange(duration.min, duration.max)}
+        </p>
       </div>
     </li>
   );
@@ -48,7 +65,7 @@ function TreatmentCard({ category }: { category: TreatmentCategory }) {
           src={category.image}
           alt=""
           fill
-          sizes="(min-width: 768px) 50vw, 100vw"
+          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
           className="object-cover transition duration-500 group-hover:scale-[1.02] group-hover:blur-[1.5px] motion-reduce:transition-none motion-reduce:group-hover:scale-100 motion-reduce:group-hover:blur-0"
         />
         <div
@@ -75,11 +92,22 @@ function TreatmentCard({ category }: { category: TreatmentCategory }) {
           </p>
         )}
 
-        <ul className="mt-4 flex-1 divide-y divide-taupe/25 border-t border-taupe/30">
-          {category.treatments.map((treatment) => (
-            <TreatmentRow key={treatment.id} treatment={treatment} />
+        <div className="mt-4 flex-1 space-y-5 border-t border-taupe/30 pt-4">
+          {groupTreatments(category.treatments).map(({ label, items }) => (
+            <section key={label || 'overig'}>
+              {label && (
+                <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-dark">
+                  {label}
+                </h4>
+              )}
+              <ul className="divide-y divide-taupe/25">
+                {items.map((treatment) => (
+                  <TreatmentRow key={treatment.id} treatment={treatment} />
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
 
         <span className="mt-6 inline-flex items-center gap-2 self-start rounded-full bg-accent px-6 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 group-hover:bg-accent-dark group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none motion-reduce:group-active:scale-100">
           Boek deze behandeling
@@ -169,7 +197,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div id="tarieven" className="mt-14 grid gap-8 md:grid-cols-2">
+          <div id="tarieven" className="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {TREATMENT_CATEGORIES.map((category) => (
               <TreatmentCard key={category.id} category={category} />
             ))}
