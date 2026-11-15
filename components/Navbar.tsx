@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { label: 'Behandelingen', href: '/behandelingen' },
   { label: 'Portfolio', href: '/portfolio' },
   { label: 'Nageldesigner', href: '/designer' },
+  { label: 'Over', href: '/over' },
   { label: 'Contact', href: '/contact' },
 ] as const;
 
@@ -104,7 +105,7 @@ export default function Navbar() {
           />
         </Link>
 
-        <ul className="hidden items-center gap-8 lg:flex">
+        <ul className="hidden items-center gap-7 lg:flex">
           {NAV_LINKS.map((link) => {
             const active = isActive(link.href);
             return (

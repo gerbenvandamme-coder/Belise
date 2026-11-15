@@ -37,3 +37,13 @@ export const SALON = {
     lastUpdated: '15 november 2026',
   },
 } as const;
+
+// Pagina "Over". Waarden die met '[' beginnen worden op de site verborgen tot ze zijn ingevuld.
+export const ABOUT = {
+  /** Voornaam of volledige naam van de zaakvoerder, bv. 'Belise'. */
+  ownerName: '[IN TE VULLEN: naam zaakvoerder]',
+  /** Eigen verhaal in alinea's. Leeg laten tot de bazin het aanlevert. */
+  story: [] as readonly string[],
+  /** Foto's van de zaak: { src: '/assets/salon/foto-1.jpg', alt: 'Beschrijving' }. */
+  photos: [] as readonly { src: string; alt: string }[],
+};

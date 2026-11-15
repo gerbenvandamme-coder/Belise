@@ -91,9 +91,15 @@ export default function PrivacyPage() {
             opvraagt, maar niet je account-, afspraak- of gezondheidsgegevens: die gaan rechtstreeks
             van je browser naar Supabase.
           </li>
+          <li>
+            <strong className="font-medium text-primary">Google Maps</strong>: de kaart op de
+            contactpagina laadt pas nadat je op &quot;Kaart tonen&quot; klikt. Vanaf dan maakt je
+            browser verbinding met Google, dat je IP-adres en toestelgegevens kan verwerken volgens
+            het eigen privacybeleid. Klik je niet, dan gaat er niets naar Google.
+          </li>
         </ul>
         <p>
-          Met beide partijen geldt een verwerkersovereenkomst (art. 28 AVG). Als gegevens buiten de
+          Met Supabase en de hostingpartij geldt een verwerkersovereenkomst (art. 28 AVG). Als gegevens buiten de
           Europese Economische Ruimte kunnen worden geraadpleegd, bijvoorbeeld voor technische
           ondersteuning door een Amerikaans moederbedrijf, gebeurt dat op basis van het EU-VS Data
           Privacy Framework of de standaardcontractbepalingen van de Europese Commissie (art. 45-46

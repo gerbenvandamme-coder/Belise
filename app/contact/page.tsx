@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import { Mail, MessageCircle, MessageSquareText, Phone } from 'lucide-react';
+import MapEmbed from '@/components/MapEmbed';
 import ContactMessageForm from '@/components/ContactMessageForm';
 import Ornament from '@/components/Ornament';
 import PageHeader from '@/components/PageHeader';
@@ -61,9 +62,6 @@ function ContactTile({
 export default function ContactPage() {
   const hasPhone = isFilledIn(CONTACT.phoneInternational);
   const hasEmail = isFilledIn(CONTACT.email);
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    `${SALON.address.street}, ${SALON.address.postalCity}`,
-  )}`;
 
   return (
     <main className="flex-1">
@@ -76,15 +74,21 @@ export default function ContactPage() {
             </>
           }
         >
-          <p>Bel, stuur een WhatsApp of mail. Of log in en stuur Belise een bericht via de site.</p>
+          <p>Tik op een knop en je toestel opent meteen de juiste app. Of log in en stuur Belise een bericht via de site.</p>
         </PageHeader>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <ContactTile
             href={hasPhone ? `tel:+${CONTACT.phoneInternational}` : null}
             icon={<Phone size={18} aria-hidden="true" />}
             title="Bellen"
             detail={isFilledIn(CONTACT.phone) ? CONTACT.phone : 'Nummer volgt binnenkort'}
+          />
+          <ContactTile
+            href={hasPhone ? `sms:+${CONTACT.phoneInternational}` : null}
+            icon={<MessageSquareText size={18} aria-hidden="true" />}
+            title="Sms"
+            detail={hasPhone ? 'Stuur een bericht (Berichten)' : 'Volgt binnenkort'}
           />
           <ContactTile
             href={
@@ -119,15 +123,6 @@ export default function ContactPage() {
             </span>
             <span className="mt-1 block text-[15px] text-primary/70">{SALON.address.postalCity}</span>
           </address>
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center gap-2 text-[13px] font-medium text-accent-dark underline-offset-4 hover:underline"
-          >
-            <MapPin size={15} aria-hidden="true" />
-            Open in Google Maps
-          </a>
           <div aria-hidden="true" className="hairline my-8 h-px" />
           <p className="font-serif text-xl italic text-primary">Enkel op afspraak</p>
           <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-primary/65">
@@ -136,6 +131,9 @@ export default function ContactPage() {
           <p className="mt-5 max-w-sm text-[13px] leading-relaxed text-primary/55">
             {SALON.parking}
           </p>
+          <div className="mt-8">
+            <MapEmbed street={SALON.address.street} postalCity={SALON.address.postalCity} />
+          </div>
         </div>
 
         <div

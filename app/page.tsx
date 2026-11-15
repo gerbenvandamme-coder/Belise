@@ -1,11 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Palette } from 'lucide-react';
-import NailCarouselShowcase from '@/components/NailCarouselShowcase';
+import { Palette } from 'lucide-react';
+import HomeCrossroads from '@/components/HomeCrossroads';
 import Ornament from '@/components/Ornament';
-import TreatmentMenu from '@/components/TreatmentMenu';
 import { TREATMENT_CATEGORIES, visibleCategories } from '@/lib/treatments';
 import { fetchTreatmentCategories } from '@/lib/services';
+import { loadCutouts } from '@/lib/showcase';
 import { createPublicSupabase } from '@/lib/supabasePublic';
 
 // Tarieven worden elke minuut opnieuw opgehaald, zodat wijzigingen in /admin snel zichtbaar zijn.
@@ -90,18 +90,18 @@ export default async function HomePage() {
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/designer"
+                href="/booking"
                 className={`${buttonBase} bg-primary text-canvas shadow-sm hover:bg-accent hover:shadow-md`}
+              >
+                Afspraak maken
+              </Link>
+              <Link
+                href="/designer"
+                className={`${buttonBase} border border-primary/25 text-primary hover:border-primary hover:bg-blush/50`}
               >
                 <Palette size={16} aria-hidden="true" />
                 Ontwerp je nagels
               </Link>
-              <a
-                href="/booking"
-                className={`${buttonBase} border border-primary/25 text-primary hover:border-primary hover:bg-blush/50`}
-              >
-                Boek behandeling
-              </a>
             </div>
 
             <ul className="mt-10 grid max-w-lg grid-cols-3 divide-x divide-taupe/40 border-y border-taupe/30 py-4 text-center">
@@ -124,78 +124,7 @@ export default async function HomePage() {
 
       <Ornament className="px-6" />
 
-      <NailCarouselShowcase />
-
-      {/* Behandelingen & Prijzen */}
-      <section id="behandelingen" className="relative bg-blush/30 py-16 lg:py-24">
-        <div aria-hidden="true" className="hairline absolute inset-x-0 top-0 h-px" />
-        <div aria-hidden="true" className="hairline absolute inset-x-0 bottom-0 h-px" />
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="reveal max-w-2xl">
-            <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-accent-dark">
-              <span aria-hidden="true" className="h-px w-8 bg-accent" />
-              Behandelingen & prijzen
-            </p>
-            <h2 className="mt-4 font-serif font-normal leading-[1] tracking-[-0.02em] text-stone-900 text-4xl sm:text-5xl lg:text-6xl">
-              Zorg die bij <span className="italic text-primary/80">jou</span> past
-            </h2>
-            <p className="mt-5 text-[15px] leading-relaxed text-primary/70">
-              Klap een categorie open en kies een behandeling als vertrekpunt. De prijzen zijn richtprijzen. De definitieve
-              prijs hangt af van lengte, design en eventuele verwijdering van een oude set.
-            </p>
-          </div>
-
-          <div id="tarieven">
-            <TreatmentMenu categories={categories} />
-          </div>
-        </div>
-      </section>
-
-      <Ornament className="px-6 pt-16 lg:pt-20" />
-
-      {/* Teaser Nagel Designer */}
-      <section id="nagel-designer" className="mx-auto max-w-7xl px-6 pb-16 pt-10 lg:px-8 lg:pb-24 lg:pt-12">
-        <div className="reveal shadow-luxe-lg relative overflow-hidden rounded-[2rem] bg-primary px-8 py-12 text-canvas sm:px-12 lg:px-16 lg:py-14">
-          {/* Fijne binnenkader */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-3 rounded-[1.6rem] border border-taupe/20 sm:inset-4"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-accent/30 blur-3xl"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-32 right-32 h-72 w-72 rounded-full bg-blush/10 blur-3xl"
-          />
-
-          <div className="relative grid items-center gap-10 lg:grid-cols-[1fr_auto]">
-            <div className="max-w-2xl">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-taupe">
-                <Palette size={16} aria-hidden="true" />
-                Nagel Designer
-              </p>
-              <h2 className="mt-5 font-serif font-normal leading-[1] tracking-[-0.02em] text-4xl sm:text-5xl lg:text-6xl">
-                Twijfel je over{' '}
-                <span className="italic text-taupe">vorm</span>{' '}
-                of kleur?
-              </h2>
-              <p className="mt-6 text-base leading-relaxed text-canvas/75 sm:text-lg">
-                Test je ideale set live in onze online designer voor je naar de salon komt.
-              </p>
-            </div>
-
-            <Link
-              href="/designer"
-              className={`${buttonBase} bg-accent text-white shadow-sm hover:bg-accent-dark hover:shadow-md`}
-            >
-              Start de designer
-              <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HomeCrossroads categoryTitles={categories.map((category) => category.title)} cutouts={loadCutouts()} />
     </main>
   );
 }
