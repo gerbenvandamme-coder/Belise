@@ -3,10 +3,9 @@
 @tailwind utilities;
 
 @layer components {
-  /* Fraunces met zachte, afgeronde hoeken (SOFT) en zonder de speelse 'wonky' letters. */
+  /* Bodoni Moda: laat de browser de optische grootte kiezen (fijner contrast bij grote koppen). */
   .font-serif {
     font-optical-sizing: auto;
-    font-variation-settings: 'SOFT' 100, 'WONK' 0;
   }
 }
 

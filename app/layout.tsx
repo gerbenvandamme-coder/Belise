@@ -1,18 +1,18 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Fraunces, Plus_Jakarta_Sans } from 'next/font/google';
+import { Bodoni_Moda, Plus_Jakarta_Sans } from 'next/font/google';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MarbleBackground from '@/components/MarbleBackground';
 import './globals.css';
 
-// Fraunces: variabel lettertype. De SOFT-as rondt de hoeken af (zie globals.css), opsz past
-// de vorm aan de grootte aan. Geen vaste gewichten: het hele bereik 100-900 is beschikbaar.
-const serif = Fraunces({
+// Bodoni Moda: klassieke luxe-serif met hoog contrast. Variabel lettertype; de opsz-as maakt
+// de haarlijnen bij kleine tekst iets steviger, zodat koppen ook op mobiel leesbaar blijven.
+const serif = Bodoni_Moda({
   subsets: ['latin'],
   style: ['normal', 'italic'],
-  axes: ['SOFT', 'opsz'],
+  axes: ['opsz'],
   variable: '--font-serif',
   display: 'swap',
 });
