@@ -27,14 +27,16 @@ export default function Footer() {
             <Clock size={16} aria-hidden="true" className="text-accent" />
             Openingstijden
           </h2>
-          <ul className="mt-4 space-y-2 text-sm text-primary/80">
-            {SALON.hours.map((entry) => (
-              <li key={entry.day} className="flex justify-between gap-6">
-                <span>{entry.day}</span>
-                <span>{entry.time}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="mt-4 text-sm font-medium text-primary">Enkel op afspraak</p>
+          <p className="mt-2 max-w-xs text-sm leading-relaxed text-primary/70">
+            De vrije momenten vind je in de online agenda.
+          </p>
+          <Link
+            href="/booking"
+            className="mt-4 inline-flex text-sm font-medium text-accent-dark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Bekijk beschikbare momenten
+          </Link>
         </div>
 
         <div>
