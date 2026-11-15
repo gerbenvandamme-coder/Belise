@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarCheck, Download, MessageCircle, X } from 'lucide-react';
-import NailCanvas from '@/components/NailCanvas';
+import NailCanvas, { HAND_OPTIONS, exportNailPreview, type HandId } from '@/components/NailCanvas';
 import NailControls, {
   DEFAULT_NAIL_CONFIG,
   FINISH_OPTIONS,
@@ -73,6 +73,8 @@ function SummaryCard({ rows }: { rows: readonly SummaryRow[] }) {
 export default function DesignerPage() {
   const router = useRouter();
   const [config, setConfig] = useState<NailConfig>(DEFAULT_NAIL_CONFIG);
+  const [hand, setHand] = useState<HandId>('licht');
+  const [exporting, setExporting] = useState(false);
   const previewRef = useRef<HTMLElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -85,14 +87,21 @@ export default function DesignerPage() {
     router.push('/booking?category=nails&design=1');
   };
 
-  const handleDownload = () => {
-    const canvas = previewRef.current?.querySelector<HTMLCanvasElement>('canvas');
-    if (!canvas) return;
-
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
-    link.download = DOWNLOAD_FILE_NAME;
-    link.click();
+  const handleDownload = async () => {
+    const svg = previewRef.current?.querySelector<SVGSVGElement>('svg[data-nail-preview]');
+    if (!svg || exporting) return;
+    setExporting(true);
+    try {
+      const href = await exportNailPreview(svg, hand);
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = DOWNLOAD_FILE_NAME;
+      link.click();
+    } catch {
+      // Export niet gelukt: de klant kan nog altijd een schermafbeelding nemen.
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -125,16 +134,40 @@ export default function DesignerPage() {
             pattern={config.pattern}
             accentColor={config.accentColor}
             accentRingOnly={config.accentRingOnly}
+            hand={hand}
           />
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3" role="radiogroup" aria-label="Huidtint van de hand">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/55">Hand</span>
+            {HAND_OPTIONS.map((option) => {
+              const selected = option.id === hand;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={option.label}
+                  title={option.label}
+                  onClick={() => setHand(option.id)}
+                  className={`h-8 w-8 rounded-full ring-offset-2 ring-offset-card transition-transform duration-200 hover:scale-110 ${FOCUS_RING} ${
+                    selected ? 'ring-2 ring-accent' : 'ring-1 ring-taupe/50'
+                  }`}
+                  style={{ backgroundColor: option.swatch }}
+                />
+              );
+            })}
+          </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={handleDownload}
+              onClick={() => void handleDownload()}
+              disabled={exporting}
               className={`${ACTION_BUTTON} border border-primary/25 text-primary hover:border-accent hover:bg-accent-soft hover:text-accent-dark`}
             >
               <Download size={16} aria-hidden="true" />
-              Download Ontwerp
+              {exporting ? 'Bezig…' : 'Download ontwerp'}
             </button>
             <button
               type="button"

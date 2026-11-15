@@ -1,435 +1,248 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useId } from 'react';
 
 export type NailFinish = 'glossy' | 'matte' | 'chrome';
 export type NailPattern = 'solid' | 'french' | 'micro-french' | 'ombre' | 'dots';
 
+export const HAND_OPTIONS = [
+  { id: 'licht', label: 'Licht', swatch: '#efbfab' },
+  { id: 'warm', label: 'Warm', swatch: '#d8926f' },
+  { id: 'goud', label: 'Goudbruin', swatch: '#c08962' },
+  { id: 'donker', label: 'Donker', swatch: '#7c493b' },
+] as const;
+
+export type HandId = (typeof HAND_OPTIONS)[number]['id'];
+
 export type NailCanvasProps = {
-  /** Nagelvorm, bijvoorbeeld 'square', 'almond' of 'squoval'. */
   shape: string;
-  /** Nagellengte, bijvoorbeeld 'short', 'medium' of 'long'. */
   length: string;
   baseColor: string;
   finish: NailFinish;
   pattern: NailPattern;
   accentColor: string;
-  /**
-   * Accentnagel: het patroon (of bij 'solid' de accentkleur) komt alleen op de ringvinger.
-   * De andere nagels blijven effen in de basiskleur.
-   */
+  /** Patroon (of bij 'solid' de accentkleur) alleen op de ringvinger. */
   accentRingOnly: boolean;
+  hand?: HandId;
   className?: string;
 };
 
-type Bounds = { x: number; y: number; width: number; height: number };
+type FingerId = 'thumb' | 'index' | 'middle' | 'ring' | 'pinky';
+/** Nagelbed per vinger, opgemeten op de foto (1200 x 896 px): nagelriem x/y, hoek, breedte, lengte. */
+type NailBed = { cx: number; cy: number; angle: number; width: number; bed: number };
 
-/** Eén nagel uit het masker, met een eigen masker op de grootte van zijn bounding box. */
-type Nail = { bounds: Bounds; mask: HTMLCanvasElement };
-
-type MaskAnalysis = { nails: Nail[]; accentIndex: number };
-
-type Assets = MaskAnalysis & {
-  hand: HTMLImageElement;
-  mask: HTMLImageElement;
-  curvature: HTMLImageElement;
-  gloss: HTMLImageElement;
+const NAIL_BEDS: Record<HandId, Record<FingerId, NailBed>> = {
+  licht: {
+    index: { cx: 498.5, cy: 163, angle: -3, width: 34, bed: 39 },
+    middle: { cx: 620, cy: 130, angle: 0, width: 37, bed: 45 },
+    ring: { cx: 732, cy: 177, angle: 8, width: 34, bed: 42 },
+    pinky: { cx: 831, cy: 297, angle: 18, width: 27, bed: 40 },
+    thumb: { cx: 352, cy: 413, angle: -53, width: 37, bed: 48 },
+  },
+  goud: {
+    index: { cx: 486, cy: 173, angle: -2, width: 33, bed: 41 },
+    middle: { cx: 611, cy: 131, angle: 0, width: 38, bed: 48 },
+    ring: { cx: 721, cy: 182, angle: 5, width: 35, bed: 44 },
+    pinky: { cx: 830, cy: 304, angle: 16, width: 27, bed: 40 },
+    thumb: { cx: 333, cy: 435, angle: -57, width: 37, bed: 48 },
+  },
+  warm: {
+    index: { cx: 492.5, cy: 172, angle: -2, width: 34, bed: 40 },
+    middle: { cx: 610, cy: 136, angle: 0, width: 38, bed: 47 },
+    ring: { cx: 731, cy: 186, angle: 6, width: 35, bed: 45 },
+    pinky: { cx: 836, cy: 305, angle: 15, width: 27, bed: 40 },
+    thumb: { cx: 343, cy: 424, angle: -55, width: 37, bed: 48 },
+  },
+  donker: {
+    index: { cx: 487.5, cy: 175, angle: -2, width: 34, bed: 40 },
+    middle: { cx: 607.5, cy: 132, angle: 0, width: 38, bed: 46 },
+    ring: { cx: 722.5, cy: 184, angle: 4, width: 35, bed: 46 },
+    pinky: { cx: 830, cy: 304, angle: 12, width: 26, bed: 40 },
+    thumb: { cx: 332, cy: 435, angle: -55, width: 37, bed: 48 },
+  },
 };
 
-type Layers = { nail: HTMLCanvasElement; scratch: HTMLCanvasElement };
+const FINGERS: readonly FingerId[] = ['thumb', 'index', 'middle', 'ring', 'pinky'];
 
-type PaintOptions = {
-  baseColor: string;
-  accentColor: string;
-  finish: NailFinish;
-  pattern: NailPattern;
-  accentRingOnly: boolean;
-};
+/** Extra lengte voorbij de vingertop, als deel van de nagelbreedte. */
+const EXTENSION: Record<string, number> = { short: 0.08, medium: 0.42, long: 0.85 };
 
-type NailArt = 'accent-fill' | Exclude<NailPattern, 'solid'>;
-
-type ComponentStat = {
-  label: number;
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-  area: number;
-};
-
-const ASSET_BASE = '/assets';
-const HAND_SRC = `${ASSET_BASE}/hand.png`;
-const CURVATURE_SRC = `${ASSET_BASE}/overlays/curvature_shadow.png`;
-const GLOSS_SRC = `${ASSET_BASE}/overlays/gloss_reflection.png`;
-
-const SAFE_NAME = /^[a-z0-9_-]+$/i;
+const VIEW_BOX = '215 15 730 560';
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
-const FALLBACK_BASE = '#1C1917';
-const FALLBACK_ACCENT = '#D4B8A5';
 
-const MATTE_GLOSS_OPACITY = 0.12;
-const DOT_COLUMNS = 3;
-const DOT_ROWS = 4;
-const DOT_RADIUS_RATIO = 0.05;
-const MASK_ALPHA_THRESHOLD = 8;
-const MAX_COMPONENTS = 65535;
-/** Componenten kleiner dan dit deel van de grootste component zijn ruis, geen nagel. */
-const MIN_NAIL_AREA_RATIO = 0.05;
-const FINGER_COUNT = 5;
-/** Positie van de ringvinger als de duim links (3) of rechts (1) in de rij staat. */
-const RING_INDEX_THUMB_LEFT = 3;
-const RING_INDEX_THUMB_RIGHT = 1;
-
-const imageCache = new Map<string, Promise<HTMLImageElement>>();
-const analysisCache = new WeakMap<HTMLImageElement, MaskAnalysis>();
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  const cached = imageCache.get(src);
-  if (cached) return cached;
-
-  const promise = new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => {
-      // Verwijder de mislukte poging, zodat een volgende poging opnieuw laadt.
-      imageCache.delete(src);
-      reject(new Error(`Afbeelding kon niet worden geladen: ${src}`));
-    };
-    img.src = src;
-  });
-
-  imageCache.set(src, promise);
-  return promise;
+export function handSrc(hand: HandId): string {
+  return `/assets/Hands/hand-${hand}.webp`;
 }
 
-function createLayer(width: number, height: number): HTMLCanvasElement {
-  const layer = document.createElement('canvas');
-  layer.width = width;
-  layer.height = height;
-  return layer;
+/** Nagelvorm in lokale coördinaten: nagelriem op y = 0, vrije rand op y = -h. */
+function nailPath(shape: string, hw: number, h: number): string {
+  const cuticle = `L ${hw} 0 Q 0 ${hw * 0.42} ${-hw} 0 Z`;
+  switch (shape) {
+    case 'square': {
+      const r = hw * 0.14;
+      return `M ${-hw} 0 L ${-hw} ${-h + r} Q ${-hw} ${-h} ${-hw + r} ${-h} L ${hw - r} ${-h} Q ${hw} ${-h} ${hw} ${-h + r} ${cuticle}`;
+    }
+    case 'squoval': {
+      const r = hw * 0.55;
+      return `M ${-hw} 0 L ${-hw} ${-h + r} Q ${-hw} ${-h} ${-hw + r} ${-h} L ${hw - r} ${-h} Q ${hw} ${-h} ${hw} ${-h + r} ${cuticle}`;
+    }
+    case 'round': {
+      const r = Math.min(hw, h);
+      return `M ${-hw} 0 L ${-hw} ${-h + r} A ${hw} ${r} 0 0 1 ${hw} ${-h + r} ${cuticle}`;
+    }
+    case 'oval':
+      return `M ${-hw} 0 L ${-hw} ${-h * 0.45} C ${-hw} ${-h * 0.92} ${-hw * 0.5} ${-h} 0 ${-h} C ${hw * 0.5} ${-h} ${hw} ${-h * 0.92} ${hw} ${-h * 0.45} ${cuticle}`;
+    case 'almond':
+      return `M ${-hw} 0 L ${-hw} ${-h * 0.32} C ${-hw} ${-h * 0.72} ${-hw * 0.32} ${-h * 0.96} 0 ${-h} C ${hw * 0.32} ${-h * 0.96} ${hw} ${-h * 0.72} ${hw} ${-h * 0.32} ${cuticle}`;
+    case 'coffin': {
+      const top = hw * 0.55;
+      return `M ${-hw} 0 L ${-hw} ${-h * 0.4} L ${-top} ${-h + 1.5} Q ${-top + 1} ${-h} ${-top + 3} ${-h} L ${top - 3} ${-h} Q ${top - 1} ${-h} ${top} ${-h + 1.5} L ${hw} ${-h * 0.4} ${cuticle}`;
+    }
+    default:
+      return `M ${-hw} 0 L ${-hw} ${-h * 0.45} C ${-hw} ${-h * 0.92} ${-hw * 0.5} ${-h} 0 ${-h} C ${hw * 0.5} ${-h} ${hw} ${-h * 0.92} ${hw} ${-h * 0.45} ${cuticle}`;
+  }
 }
 
-function buildNailMask(
-  data: Uint8ClampedArray,
-  labels: Uint16Array,
-  stat: ComponentStat,
-  imageWidth: number,
-): HTMLCanvasElement {
-  const width = stat.maxX - stat.minX + 1;
-  const height = stat.maxY - stat.minY + 1;
-  const canvas = createLayer(width, height);
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Canvas 2D is niet beschikbaar in deze browser.');
+/** French-rand met een lichte glimlachlijn. depth = diepte vanaf de vrije rand. */
+function smilePath(hw: number, h: number, depth: number): string {
+  const y = -h + depth;
+  return `M ${-hw * 1.3} ${y - depth * 0.55} Q 0 ${y + depth * 0.5} ${hw * 1.3} ${y - depth * 0.55} L ${hw * 1.3} ${-h - 4} L ${-hw * 1.3} ${-h - 4} Z`;
+}
 
-  const image = ctx.createImageData(width, height);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const source = (stat.minY + y) * imageWidth + stat.minX + x;
-      if (labels[source] !== stat.label) continue;
-      const target = (y * width + x) * 4;
-      image.data[target] = 255;
-      image.data[target + 1] = 255;
-      image.data[target + 2] = 255;
-      image.data[target + 3] = data[source * 4 + 3];
+function Nail({
+  id,
+  bed,
+  shape,
+  length,
+  base,
+  accent,
+  finish,
+  art,
+}: {
+  id: string;
+  bed: NailBed;
+  shape: string;
+  length: string;
+  base: string;
+  accent: string;
+  finish: NailFinish;
+  art: NailPattern | 'accent-fill';
+}) {
+  const hw = bed.width / 2;
+  const h = bed.bed + (EXTENSION[length] ?? EXTENSION.medium) * bed.width;
+  const path = nailPath(shape, hw, h);
+  const fill = art === 'accent-fill' ? accent : base;
+
+  const dots: { x: number; y: number }[] = [];
+  if (art === 'dots') {
+    const r = bed.width * 0.075;
+    for (let row = 0; row < 6; row++) {
+      for (let col = -1; col <= 1; col++) {
+        const y = -h + r * 2.2 + row * r * 3.6;
+        if (y > -r * 1.5) continue;
+        dots.push({ x: col * r * 3.6 + (row % 2 ? r * 1.8 : 0), y });
+      }
     }
   }
-  ctx.putImageData(image, 0, 0);
-  return canvas;
+
+  return (
+    <g transform={`translate(${bed.cx} ${bed.cy}) rotate(${bed.angle})`} filter={`url(#${id}-lift)`}>
+      <clipPath id={`${id}-clip`}>
+        <path d={path} />
+      </clipPath>
+      <g clipPath={`url(#${id}-clip)`} mask={`url(#${id}-soft)`}>
+        {art === 'ombre' ? (
+          <rect x={-hw - 2} y={-h - 2} width={bed.width + 4} height={h + hw} fill={`url(#${id}-ombre)`} />
+        ) : (
+          <rect x={-hw - 2} y={-h - 2} width={bed.width + 4} height={h + hw} fill={fill} />
+        )}
+        {art === 'french' && <path d={smilePath(hw, h, Math.max(h * 0.3, 8))} fill={accent} />}
+        {art === 'micro-french' && <path d={smilePath(hw, h, Math.max(h * 0.1, 3))} fill={accent} />}
+        {dots.map((dot) => (
+          <circle key={`${dot.x}-${dot.y}`} cx={dot.x} cy={dot.y} r={bed.width * 0.075} fill={accent} />
+        ))}
+
+        {/* Ronding: donkerder aan de zijkanten en bij de vrije rand. */}
+        <rect
+          x={-hw - 2}
+          y={-h - 2}
+          width={bed.width + 4}
+          height={h + hw}
+          fill={`url(#${id}-curve)`}
+          style={{ mixBlendMode: 'multiply' }}
+        />
+
+        {finish === 'glossy' && (
+          <>
+            <rect
+              x={-hw * 0.52}
+              y={-h * 0.88}
+              width={hw * 0.3}
+              height={h * 0.62}
+              rx={hw * 0.15}
+              fill="#fff"
+              opacity={0.55}
+              filter={`url(#${id}-blur)`}
+            />
+            <ellipse cx={hw * 0.3} cy={-h * 0.82} rx={hw * 0.14} ry={h * 0.06} fill="#fff" opacity={0.5} />
+          </>
+        )}
+        {finish === 'matte' && (
+          <rect x={-hw - 2} y={-h - 2} width={bed.width + 4} height={h + hw} fill="#fff" opacity={0.08} />
+        )}
+        {finish === 'chrome' && (
+          <rect
+            x={-hw - 2}
+            y={-h - 2}
+            width={bed.width + 4}
+            height={h + hw}
+            fill={`url(#${id}-chrome)`}
+            style={{ mixBlendMode: 'screen' }}
+          />
+        )}
+      </g>
+      <path d={path} fill="none" stroke="rgba(40,20,15,0.18)" strokeWidth={0.6} />
+
+      <defs>
+        <linearGradient id={`${id}-ombre`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={-h}>
+          <stop offset="0.15" stopColor={base} />
+          <stop offset="0.95" stopColor={accent} />
+        </linearGradient>
+        <linearGradient id={`${id}-curve`} gradientUnits="userSpaceOnUse" x1={-hw} y1="0" x2={hw} y2="0">
+          <stop offset="0" stopColor="#b9a8a2" />
+          <stop offset="0.22" stopColor="#ffffff" />
+          <stop offset="0.7" stopColor="#ffffff" />
+          <stop offset="1" stopColor="#b9a8a2" />
+        </linearGradient>
+        <linearGradient id={`${id}-chrome`} gradientUnits="userSpaceOnUse" x1={-hw} y1={-h} x2={hw} y2="0">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.75" />
+          <stop offset="0.35" stopColor="#ffffff" stopOpacity="0.05" />
+          <stop offset="0.55" stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="0.8" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0.3" />
+        </linearGradient>
+        <linearGradient id={`${id}-fade`} gradientUnits="userSpaceOnUse" x1="0" y1={hw * 0.45} x2="0" y2={-hw * 0.2}>
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="1" stopColor="#fff" stopOpacity="1" />
+        </linearGradient>
+        <mask id={`${id}-soft`} maskUnits="userSpaceOnUse" x={-hw - 4} y={-h - 6} width={bed.width + 8} height={h + hw + 10}>
+          <rect x={-hw - 4} y={-h - 6} width={bed.width + 8} height={h + hw + 10} fill={`url(#${id}-fade)`} />
+        </mask>
+        <filter id={`${id}-blur`} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation={hw * 0.09} />
+        </filter>
+        <filter id={`${id}-lift`} x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="1.2" stdDeviation="1.3" floodColor="#3a2219" floodOpacity="0.28" />
+        </filter>
+      </defs>
+    </g>
+  );
 }
 
 /**
- * Aanname: de vijf nagels staan in een rij naast elkaar en de duimnagel ligt lager dan de
- * pinknagel. Daarmee bepalen we of de duim links of rechts staat en welke nagel de ringvinger is.
+ * Nageldesigner: een echte handfoto met nagels als SVG-lagen erover.
+ * Werkt volledig in de browser, zonder maskerbestanden.
  */
-function pickAccentIndex(nails: readonly Nail[]): number {
-  const count = nails.length;
-  if (count !== FINGER_COUNT) return Math.min(RING_INDEX_THUMB_LEFT, count - 1);
-
-  const centerY = (nail: Nail) => nail.bounds.y + nail.bounds.height / 2;
-  const thumbIsLeft = centerY(nails[0]) > centerY(nails[count - 1]);
-  return thumbIsLeft ? RING_INDEX_THUMB_LEFT : RING_INDEX_THUMB_RIGHT;
-}
-
-/** Splitst het masker in losse nagels (links naar rechts) en bepaalt de ringvinger. */
-function analyzeMask(mask: HTMLImageElement): MaskAnalysis {
-  const cached = analysisCache.get(mask);
-  if (cached) return cached;
-
-  const width = mask.naturalWidth;
-  const height = mask.naturalHeight;
-  if (width === 0 || height === 0) {
-    throw new Error('Het nagelmasker heeft geen afmetingen.');
-  }
-
-  const scanCanvas = createLayer(width, height);
-  const ctx = scanCanvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('Canvas 2D is niet beschikbaar in deze browser.');
-
-  ctx.drawImage(mask, 0, 0);
-  const { data } = ctx.getImageData(0, 0, width, height);
-
-  const labels = new Uint16Array(width * height);
-  const stack = new Int32Array(width * height);
-  const stats: ComponentStat[] = [];
-
-  for (let start = 0; start < labels.length; start++) {
-    if (labels[start] !== 0 || data[start * 4 + 3] <= MASK_ALPHA_THRESHOLD) continue;
-    if (stats.length >= MAX_COMPONENTS) break;
-
-    const label = stats.length + 1;
-    const stat: ComponentStat = {
-      label,
-      minX: width,
-      minY: height,
-      maxX: -1,
-      maxY: -1,
-      area: 0,
-    };
-
-    let top = 0;
-    stack[top++] = start;
-    labels[start] = label;
-
-    const visit = (index: number) => {
-      if (labels[index] === 0 && data[index * 4 + 3] > MASK_ALPHA_THRESHOLD) {
-        labels[index] = label;
-        stack[top++] = index;
-      }
-    };
-
-    while (top > 0) {
-      const index = stack[--top];
-      const x = index % width;
-      const y = (index - x) / width;
-
-      stat.area++;
-      if (x < stat.minX) stat.minX = x;
-      if (x > stat.maxX) stat.maxX = x;
-      if (y < stat.minY) stat.minY = y;
-      if (y > stat.maxY) stat.maxY = y;
-
-      if (x > 0) visit(index - 1);
-      if (x < width - 1) visit(index + 1);
-      if (y > 0) visit(index - width);
-      if (y < height - 1) visit(index + width);
-    }
-
-    stats.push(stat);
-  }
-
-  let analysis: MaskAnalysis;
-
-  if (stats.length === 0) {
-    // Leeg masker: behandel de hele afbeelding als één nagel, zodat er niets crasht.
-    analysis = {
-      nails: [{ bounds: { x: 0, y: 0, width, height }, mask: scanCanvas }],
-      accentIndex: 0,
-    };
-  } else {
-    const largest = Math.max(...stats.map((stat) => stat.area));
-    const nails: Nail[] = stats
-      .filter((stat) => stat.area >= largest * MIN_NAIL_AREA_RATIO)
-      .map((stat) => ({
-        bounds: {
-          x: stat.minX,
-          y: stat.minY,
-          width: stat.maxX - stat.minX + 1,
-          height: stat.maxY - stat.minY + 1,
-        },
-        mask: buildNailMask(data, labels, stat, width),
-      }))
-      .sort((a, b) => a.bounds.x + a.bounds.width / 2 - (b.bounds.x + b.bounds.width / 2));
-
-    analysis = { nails, accentIndex: pickAccentIndex(nails) };
-  }
-
-  analysisCache.set(mask, analysis);
-  return analysis;
-}
-
-function drawPattern(
-  ctx: CanvasRenderingContext2D,
-  pattern: Exclude<NailPattern, 'solid'>,
-  bounds: Bounds,
-  baseColor: string,
-  accentColor: string,
-) {
-  const { x, y, width, height } = bounds;
-
-  switch (pattern) {
-    case 'french': {
-      // Aanname: de nageltop ligt aan de bovenkant van de nagel.
-      ctx.beginPath();
-      ctx.moveTo(x - 2, y - 2);
-      ctx.lineTo(x + width + 2, y - 2);
-      ctx.lineTo(x + width + 2, y + height * 0.2);
-      ctx.quadraticCurveTo(x + width / 2, y + height * 0.42, x - 2, y + height * 0.2);
-      ctx.closePath();
-      ctx.fillStyle = accentColor;
-      ctx.fill();
-      break;
-    }
-    case 'micro-french': {
-      // Smalle tipbaan: dezelfde boogvorm als 'french', maar op ongeveer de helft van de hoogte.
-      ctx.beginPath();
-      ctx.moveTo(x - 2, y - 2);
-      ctx.lineTo(x + width + 2, y - 2);
-      ctx.lineTo(x + width + 2, y + height * 0.1);
-      ctx.quadraticCurveTo(x + width / 2, y + height * 0.2, x - 2, y + height * 0.1);
-      ctx.closePath();
-      ctx.fillStyle = accentColor;
-      ctx.fill();
-      break;
-    }
-    case 'ombre': {
-      const gradient = ctx.createLinearGradient(0, y, 0, y + height);
-      gradient.addColorStop(0, accentColor);
-      gradient.addColorStop(1, baseColor);
-      ctx.fillStyle = gradient;
-      ctx.fillRect(x - 2, y - 2, width + 4, height + 4);
-      break;
-    }
-    case 'dots': {
-      const radius = Math.min(width, height) * DOT_RADIUS_RATIO;
-      ctx.fillStyle = accentColor;
-      for (let row = 0; row < DOT_ROWS; row++) {
-        for (let col = 0; col < DOT_COLUMNS; col++) {
-          const stagger = row % 2 === 1 ? width / (DOT_COLUMNS + 1) / 2 : 0;
-          const cx = x + (width * (col + 1)) / (DOT_COLUMNS + 1) + stagger;
-          const cy = y + (height * (row + 1)) / (DOT_ROWS + 1);
-          ctx.beginPath();
-          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-      break;
-    }
-  }
-}
-
-function drawChromeSheen(ctx: CanvasRenderingContext2D, width: number, height: number) {
-  const sheen = ctx.createLinearGradient(0, 0, width, height);
-  sheen.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
-  sheen.addColorStop(0.45, 'rgba(255, 255, 255, 0.05)');
-  sheen.addColorStop(0.55, 'rgba(0, 0, 0, 0.25)');
-  sheen.addColorStop(1, 'rgba(255, 255, 255, 0.7)');
-
-  ctx.globalCompositeOperation = 'overlay';
-  ctx.fillStyle = sheen;
-  ctx.fillRect(0, 0, width, height);
-  ctx.globalCompositeOperation = 'source-over';
-}
-
-/** Bepaalt wat er op een nagel komt bovenop de basiskleur, of null als er niets bijkomt. */
-function resolveNailArt(options: PaintOptions, isAccentNail: boolean): NailArt | null {
-  if (options.accentRingOnly && !isAccentNail) return null;
-  if (options.pattern === 'solid') return options.accentRingOnly ? 'accent-fill' : null;
-  return options.pattern;
-}
-
-/**
- * Tekent kleur of patroon voor één nagel op een tijdelijk canvas, knipt dat met het eigen
- * masker van de nagel en zet het resultaat op de nagellaag. Zo lekt niets naar buurnagels.
- */
-function paintNailArt(
-  ctx: CanvasRenderingContext2D,
-  scratch: HTMLCanvasElement,
-  nail: Nail,
-  art: NailArt,
-  options: PaintOptions,
-  scale: number,
-) {
-  const scratchCtx = scratch.getContext('2d');
-  if (!scratchCtx) return;
-
-  const { bounds } = nail;
-  const originX = Math.floor(bounds.x * scale);
-  const originY = Math.floor(bounds.y * scale);
-  const width = Math.ceil((bounds.x + bounds.width) * scale) - originX;
-  const height = Math.ceil((bounds.y + bounds.height) * scale) - originY;
-  if (width <= 0 || height <= 0) return;
-
-  // Nieuwe afmetingen wissen het canvas en zetten de context terug.
-  scratch.width = width;
-  scratch.height = height;
-  scratchCtx.setTransform(scale, 0, 0, scale, -originX, -originY);
-
-  scratchCtx.fillStyle = art === 'accent-fill' ? options.accentColor : options.baseColor;
-  scratchCtx.fillRect(bounds.x - 2, bounds.y - 2, bounds.width + 4, bounds.height + 4);
-
-  if (art !== 'accent-fill') {
-    drawPattern(scratchCtx, art, bounds, options.baseColor, options.accentColor);
-  }
-
-  scratchCtx.globalCompositeOperation = 'destination-in';
-  scratchCtx.drawImage(nail.mask, bounds.x, bounds.y, bounds.width, bounds.height);
-
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(scratch, originX, originY);
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
-}
-
-/** Tekent de nagels (kleur, patroon, schaduw, glans) en knipt die naar het masker. */
-function paintNailLayer(layers: Layers, assets: Assets, options: PaintOptions, scale: number) {
-  const layer = layers.nail;
-  const ctx = layer.getContext('2d');
-  if (!ctx) return;
-
-  const { hand, mask, curvature, gloss, nails, accentIndex } = assets;
-  const width = hand.naturalWidth;
-  const height = hand.naturalHeight;
-
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, layer.width, layer.height);
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = 1;
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
-
-  ctx.fillStyle = options.baseColor;
-  ctx.fillRect(0, 0, width, height);
-
-  nails.forEach((nail, index) => {
-    const art = resolveNailArt(options, index === accentIndex);
-    if (art) paintNailArt(ctx, layers.scratch, nail, art, options, scale);
-  });
-
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.drawImage(curvature, 0, 0, width, height);
-
-  ctx.globalCompositeOperation = 'screen';
-  ctx.globalAlpha = options.finish === 'matte' ? MATTE_GLOSS_OPACITY : 1;
-  ctx.drawImage(gloss, 0, 0, width, height);
-  ctx.globalAlpha = 1;
-
-  if (options.finish === 'chrome') {
-    drawChromeSheen(ctx, width, height);
-  }
-
-  // Alles buiten het nagelmasker verdwijnt, dus schaduw en glans blijven op de nagel.
-  ctx.globalCompositeOperation = 'destination-in';
-  ctx.drawImage(mask, 0, 0, width, height);
-  ctx.globalCompositeOperation = 'source-over';
-}
-
-function paintFrame(
-  canvas: HTMLCanvasElement,
-  assets: Assets,
-  options: PaintOptions,
-  layers: Layers,
-) {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  const scale = canvas.width / assets.hand.naturalWidth;
-
-  paintNailLayer(layers, assets, options, scale);
-
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(assets.hand, 0, 0, canvas.width, canvas.height);
-  ctx.drawImage(layers.nail, 0, 0);
-}
-
 export default function NailCanvas({
   shape,
   length,
@@ -438,137 +251,82 @@ export default function NailCanvas({
   pattern,
   accentColor,
   accentRingOnly,
+  hand = 'licht',
   className,
 }: NailCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const layersRef = useRef<Layers | null>(null);
+  const uid = useId().replace(/[^a-z0-9]/gi, '');
+  const base = HEX_COLOR.test(baseColor) ? baseColor : '#D8B9A0';
+  const accent = HEX_COLOR.test(accentColor) ? accentColor : '#6B1E2E';
+  const beds = NAIL_BEDS[hand];
 
-  const [assets, setAssets] = useState<Assets | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [cssWidth, setCssWidth] = useState(0);
-
-  const safeBase = HEX_COLOR.test(baseColor) ? baseColor : FALLBACK_BASE;
-  const safeAccent = HEX_COLOR.test(accentColor) ? accentColor : FALLBACK_ACCENT;
-
-  // Laad de afbeeldingen en het masker voor de gekozen vorm en lengte.
-  useEffect(() => {
-    if (!SAFE_NAME.test(shape) || !SAFE_NAME.test(length)) {
-      setAssets(null);
-      setError(`Onbekende nagelvorm of lengte: ${shape} / ${length}`);
-      return;
-    }
-
-    let cancelled = false;
-    const maskSrc = `${ASSET_BASE}/masks/${shape}_${length}.png`;
-
-    Promise.all([
-      loadImage(HAND_SRC),
-      loadImage(maskSrc),
-      loadImage(CURVATURE_SRC),
-      loadImage(GLOSS_SRC),
-    ])
-      .then(([hand, mask, curvature, gloss]) => {
-        if (cancelled) return;
-        const analysis = analyzeMask(mask);
-        setError(null);
-        setAssets({ hand, mask, curvature, gloss, ...analysis });
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setAssets(null);
-        setError(err instanceof Error ? err.message : 'Assets laden is mislukt.');
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [shape, length]);
-
-  // Volg de breedte van de container, zodat de canvas scherp blijft op elk formaat.
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const update = () => setCssWidth(container.clientWidth);
-    update();
-
-    const observer = new ResizeObserver(update);
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
-
-  // Teken één frame per state-update via requestAnimationFrame.
-  useEffect(() => {
-    if (!assets || cssWidth === 0) return;
-
-    const frame = window.requestAnimationFrame(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const width = Math.round(cssWidth * dpr);
-      const height = Math.round(width * (assets.hand.naturalHeight / assets.hand.naturalWidth));
-
-      if (canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-      }
-
-      let layers = layersRef.current;
-      if (!layers || layers.nail.width !== width || layers.nail.height !== height) {
-        layers = { nail: createLayer(width, height), scratch: createLayer(1, 1) };
-        layersRef.current = layers;
-      }
-
-      paintFrame(
-        canvas,
-        assets,
-        {
-          baseColor: safeBase,
-          accentColor: safeAccent,
-          finish,
-          pattern,
-          accentRingOnly,
-        },
-        layers,
-      );
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [assets, cssWidth, safeBase, safeAccent, finish, pattern, accentRingOnly]);
-
-  const label = `Nagelvoorbeeld: ${shape}, ${length}, ${finish}, patroon ${pattern}`;
-  const containerClass = [
-    'relative w-full',
-    assets ? '' : 'min-h-[16rem]',
-    className ?? '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const artFor = (finger: FingerId): NailPattern | 'accent-fill' => {
+    if (!accentRingOnly) return pattern;
+    if (finger !== 'ring') return 'solid';
+    return pattern === 'solid' ? 'accent-fill' : pattern;
+  };
 
   return (
-    <div ref={containerRef} className={containerClass}>
-      <canvas
-        ref={canvasRef}
-        role="img"
-        aria-label={label}
-        aria-busy={!assets && !error}
-        className="block h-auto w-full"
-      />
-      {!assets && !error && (
-        <p className="absolute inset-0 flex items-center justify-center text-sm text-primary/60">
-          Nagelbeeld laden…
-        </p>
-      )}
-      {error && (
-        <p
-          role="alert"
-          className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-red-700"
-        >
-          {error}
-        </p>
-      )}
-    </div>
+    <svg
+      viewBox={VIEW_BOX}
+      role="img"
+      aria-label={`Nagelvoorbeeld: ${shape}, ${length}, ${finish}, patroon ${pattern}`}
+      data-nail-preview=""
+      className={`block h-auto w-full select-none rounded-2xl ${className ?? ''}`}
+    >
+      <image href={handSrc(hand)} x="0" y="0" width="1200" height="896" preserveAspectRatio="none" />
+      {FINGERS.map((finger) => (
+        <Nail
+          key={finger}
+          id={`n${uid}${finger}`}
+          bed={beds[finger]}
+          shape={shape}
+          length={length}
+          base={base}
+          accent={accent}
+          finish={finish}
+          art={artFor(finger)}
+        />
+      ))}
+    </svg>
   );
+}
+
+/** Zet het voorbeeld om naar een PNG (de foto wordt ingebed zodat de export volledig is). */
+export async function exportNailPreview(svg: SVGSVGElement, hand: HandId): Promise<string> {
+  const response = await fetch(handSrc(hand));
+  const blob = await response.blob();
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Foto kon niet worden gelezen.'));
+    reader.readAsDataURL(blob);
+  });
+
+  const clone = svg.cloneNode(true) as SVGSVGElement;
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.querySelector('image')?.setAttribute('href', dataUrl);
+  const [, , vw, vh] = (svg.getAttribute('viewBox') ?? '0 0 730 560').split(' ').map(Number);
+  const scale = 2;
+  clone.setAttribute('width', String(vw * scale));
+  clone.setAttribute('height', String(vh * scale));
+
+  const source = new XMLSerializer().serializeToString(clone);
+  const url = URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' }));
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Export mislukt.'));
+      img.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = vw * scale;
+    canvas.height = vh * scale;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Export mislukt.');
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/png');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
