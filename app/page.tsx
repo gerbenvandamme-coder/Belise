@@ -52,6 +52,7 @@ export default async function HomePage() {
             <span className="mt-3 block pl-[0.35em] text-[length:clamp(2rem,6vw,4.75rem)] font-normal italic leading-none tracking-[0.01em] text-accent">
               Beauty
             </span>
+            <span className="sr-only"> – beautysalon in Opwijk voor nagels, ontharing en haarverzorging</span>
           </h1>
 
           <figure className="relative mx-auto w-full max-w-[19rem] sm:max-w-sm lg:ml-auto lg:mr-6 lg:max-w-[22rem]">

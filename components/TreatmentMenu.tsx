@@ -152,7 +152,7 @@ function TreatmentCard({
         <div className="relative aspect-[16/9] w-full overflow-hidden">
           <Image
             src={category.image}
-            alt=""
+            alt={`${category.title} bij Belise in Opwijk`}""
             fill
             priority={eager}
             sizes="(min-width: 1280px) 22vw, (min-width: 768px) 45vw, 100vw"
