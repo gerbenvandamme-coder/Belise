@@ -126,8 +126,15 @@ function getInitialSelection(
   categoryParam: string | null,
   itemParam: string | null,
 ): InitialSelection {
-  const item = itemParam ? STATIC_BOOKABLE_BY_ID.get(itemParam) : undefined;
-  if (item) return { categoryId: item.categoryId, treatmentIds: [item.id] };
+  // ?item=a of ?item=a,b,c (meerdere behandelingen gekozen op /behandelingen).
+  const items = (itemParam ?? '')
+    .split(',')
+    .map((id) => STATIC_BOOKABLE_BY_ID.get(id.trim()))
+    .filter((found): found is NonNullable<typeof found> => Boolean(found));
+  const unique = items.filter((found, index) => items.findIndex((other) => other.id === found.id) === index);
+  if (unique.length > 0) {
+    return { categoryId: unique[0].categoryId, treatmentIds: unique.map((found) => found.id) };
+  }
   if (isTreatmentCategoryId(categoryParam)) return { categoryId: categoryParam, treatmentIds: [] };
   return { categoryId: DEFAULT_CATEGORY_ID, treatmentIds: [] };
 }

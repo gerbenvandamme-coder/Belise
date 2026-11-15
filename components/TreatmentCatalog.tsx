@@ -1,10 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState, type RefObject } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, CalendarPlus, ChevronDown, Clock, Info, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, ChevronUp, Clock, Info, Plus, X } from 'lucide-react';
 import { ITEM_NOTE, infoFor } from '@/lib/treatmentInfo';
 import {
   LENGTH_LABELS,
@@ -48,17 +58,110 @@ function durationOf(items: readonly TreatmentItem[]) {
   return { min: Math.min(...durations.map((d) => d.min)), max: Math.max(...durations.map((d) => d.max)) };
 }
 
-const bookItemHref = (item: TreatmentItem) => `/booking?item=${encodeURIComponent(item.id)}`;
+const bookingHref = (ids: readonly string[]) =>
+  `/booking?item=${ids.map((id) => encodeURIComponent(id)).join(',')}`;
+
+/* ---------------------------------------------------------- selectie ---- */
+
+const STORAGE_KEY = 'belise-selectie';
+
+type Selection = {
+  ids: readonly string[];
+  has: (id: string) => boolean;
+  toggle: (id: string) => void;
+  remove: (id: string) => void;
+  clear: () => void;
+};
+
+const SelectionContext = createContext<Selection | null>(null);
+
+function useSelection(): Selection {
+  const value = useContext(SelectionContext);
+  if (!value) throw new Error('useSelection buiten TreatmentCatalog');
+  return value;
+}
+
+/** Selectie van behandelingen, bewaard voor dit tabblad (sessionStorage) zodat terugkeren niets wist. */
+function useSelectionState(validIds: ReadonlySet<string>): Selection {
+  const [ids, setIds] = useState<string[]>([]);
+  const loaded = useRef(false);
+
+  useEffect(() => {
+    try {
+      const raw = window.sessionStorage.getItem(STORAGE_KEY);
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) {
+        setIds(parsed.filter((id): id is string => typeof id === 'string' && validIds.has(id)));
+      }
+    } catch {
+      // Geen opslag beschikbaar: selectie blijft enkel in het geheugen.
+    }
+    loaded.current = true;
+  }, [validIds]);
+
+  useEffect(() => {
+    if (!loaded.current) return;
+    try {
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    } catch {
+      // Negeren: zie hierboven.
+    }
+  }, [ids]);
+
+  return useMemo(
+    () => ({
+      ids,
+      has: (id: string) => ids.includes(id),
+      toggle: (id: string) =>
+        setIds((current) => (current.includes(id) ? current.filter((other) => other !== id) : [...current, id])),
+      remove: (id: string) => setIds((current) => current.filter((other) => other !== id)),
+      clear: () => setIds([]),
+    }),
+    [ids],
+  );
+}
+
+/** Toevoegen-knop die omslaat naar "Gekozen". */
+function PickButton({ item, size = 'sm' }: { item: TreatmentItem; size?: 'sm' | 'lg' }) {
+  const selection = useSelection();
+  const picked = selection.has(item.id);
+  const large = size === 'lg';
+  return (
+    <button
+      type="button"
+      aria-pressed={picked}
+      aria-label={picked ? `${item.title} verwijderen uit je afspraak` : `${item.title} toevoegen aan je afspraak`}
+      onClick={() => selection.toggle(item.id)}
+      className={`ease-luxe inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full font-medium transition-all duration-300 active:scale-95 motion-reduce:transition-none ${FOCUS} ${
+        large ? 'h-12 flex-1 px-6 text-[14px]' : 'h-9 px-3.5 text-[12px]'
+      } ${
+        picked
+          ? 'bg-accent-soft text-accent-dark ring-1 ring-accent/40'
+          : 'bg-accent text-white shadow-sm hover:bg-accent-dark'
+      }`}
+    >
+      {picked ? <Check size={large ? 16 : 14} aria-hidden="true" /> : <Plus size={large ? 16 : 14} aria-hidden="true" />}
+      <span className={large ? '' : 'hidden sm:inline'}>
+        {picked ? (large ? 'Gekozen · tik om te verwijderen' : 'Gekozen') : large ? 'Toevoegen aan je afspraak' : 'Toevoegen'}
+      </span>
+    </button>
+  );
+}
 
 /* ---------------------------------------------------------------- rij ---- */
 
 function TreatmentRow({ item, onInfo }: { item: TreatmentItem; onInfo: () => void }) {
+  const picked = useSelection().has(item.id);
   const price = getPriceRange(item);
   const duration = getDurationRange(item);
   const note = ITEM_NOTE[item.id];
 
   return (
-    <li className="group/row flex items-center gap-3 rounded-2xl px-3 py-3 transition-colors duration-300 hover:bg-blush/35 sm:px-4">
+    <li
+      className={`group/row flex items-center gap-3 rounded-2xl px-3 py-3 transition-colors duration-300 sm:px-4 ${
+        picked ? 'bg-accent-soft/50' : 'hover:bg-blush/35'
+      }`}
+    >
       <button
         type="button"
         onClick={onInfo}
@@ -85,14 +188,7 @@ function TreatmentRow({ item, onInfo }: { item: TreatmentItem; onInfo: () => voi
         </span>
         <span className="sr-only">Meer info over {item.title}</span>
       </button>
-      <Link
-        href={bookItemHref(item)}
-        aria-label={`Boek ${item.title}`}
-        className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-accent px-3.5 text-[12px] font-medium text-white shadow-sm transition-colors duration-300 hover:bg-accent-dark ${FOCUS}`}
-      >
-        <CalendarPlus size={14} aria-hidden="true" />
-        <span className="hidden sm:inline">Boek</span>
-      </Link>
+      <PickButton item={item} />
     </li>
   );
 }
@@ -225,8 +321,8 @@ function CategoryCard({
         />
         {/* Foto: zet uit wanneer de categorie opent. */}
         <span
-          className={`ease-luxe relative block w-full shrink-0 overflow-hidden transition-[height,flex-basis] duration-700 motion-reduce:transition-none ${
-            open ? 'h-56 md:h-80 md:basis-[46%]' : 'h-40 md:h-60 md:basis-[34%]'
+          className={`ease-luxe relative block w-full shrink-0 overflow-hidden transition-[height,flex-basis] duration-700 motion-reduce:transition-none [mask-image:linear-gradient(to_bottom,#000_55%,transparent)] md:[mask-image:linear-gradient(to_right,#000_45%,rgba(0,0,0,0.55)_72%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,#000_55%,transparent)] md:[-webkit-mask-image:linear-gradient(to_right,#000_45%,rgba(0,0,0,0.55)_72%,transparent)] ${
+            open ? 'h-60 md:h-80 md:basis-[52%]' : 'h-44 md:h-60 md:basis-[42%]'
           }`}
         >
           {category.image ? (
@@ -243,16 +339,12 @@ function CategoryCard({
           ) : (
             <span className="absolute inset-0 bg-gradient-to-br from-[#EBCFD4] via-[#F2E3DC] to-[#EEE2D2]" />
           )}
-          <span
-            aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-[#3a2219]/35 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-card/30"
-          />
           <span className="absolute left-4 top-4 rounded-full bg-gradient-to-br from-[#7A4652] to-[#A46F79] px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-canvas shadow-sm">
             {String(index + 1).padStart(2, '0')}
           </span>
         </span>
 
-        <span className="relative flex min-w-0 flex-1 flex-col justify-between gap-5 p-6 sm:p-8">
+        <span className="relative -mt-10 flex min-w-0 flex-1 flex-col justify-between gap-5 p-6 sm:p-8 md:-ml-24 md:mt-0">
           <span
             aria-hidden="true"
             className={`pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-accent/10 blur-3xl transition-opacity duration-700 ${
@@ -336,20 +428,160 @@ function CategoryCard({
             </div>
             <div className="mt-6 flex flex-col items-start justify-between gap-3 rounded-[1.5rem] bg-gradient-to-r from-[#F6E5E8] to-[#FAF1EC] px-5 py-4 sm:flex-row sm:items-center">
               <p className="text-[13px] text-primary/70">
-                Klik op een behandeling voor meer info, of boek meteen.
+                Tik op een behandeling voor meer info. Met &quot;Toevoegen&quot; stel je je afspraak samen,
+                ook over categorieën heen.
               </p>
-              <Link
-                href={`/booking?category=${category.id}`}
-                className={`inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-[13px] font-medium text-canvas transition-colors hover:bg-accent ${FOCUS}`}
-              >
-                Boek {category.title.toLowerCase()}
-                <ArrowRight size={14} aria-hidden="true" />
-              </Link>
+              <FooterCta categoryId={category.id} title={category.title} />
             </div>
           </div>
         </div>
       </div>
     </article>
+  );
+}
+
+function FooterCta({ categoryId, title }: { categoryId: string; title: string }) {
+  const { ids } = useSelection();
+  const href = ids.length > 0 ? bookingHref(ids) : `/booking?category=${categoryId}`;
+  return (
+    <Link
+      href={href}
+      className={`inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-[13px] font-medium text-canvas transition-colors hover:bg-accent ${FOCUS}`}
+    >
+      {ids.length > 0 ? 'Verder naar datum' : `Boek ${title.toLowerCase()}`}
+      <ArrowRight size={14} aria-hidden="true" />
+    </Link>
+  );
+}
+
+/* ------------------------------------------------------- zwevende balk ---- */
+
+function SelectionBar({ byId }: { byId: ReadonlyMap<string, TreatmentItem> }) {
+  const selection = useSelection();
+  const [expanded, setExpanded] = useState(false);
+  const items = selection.ids.flatMap((id) => {
+    const item = byId.get(id);
+    return item ? [item] : [];
+  });
+
+  useEffect(() => {
+    if (items.length === 0) setExpanded(false);
+  }, [items.length]);
+
+  const price = items.reduce(
+    (sum, item) => {
+      const range = getPriceRange(item);
+      return { min: sum.min + range.min, max: sum.max + range.max };
+    },
+    { min: 0, max: 0 },
+  );
+  const duration = items.reduce(
+    (sum, item) => {
+      const range = getDurationRange(item);
+      return { min: sum.min + range.min, max: sum.max + range.max };
+    },
+    { min: 0, max: 0 },
+  );
+
+  return (
+    <AnimatePresence>
+      {items.length > 0 && (
+        <motion.div
+          key="bar"
+          className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-3 sm:bottom-6"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 40 }}
+          transition={{ duration: 0.45, ease: EASE }}
+        >
+          <div className="w-full max-w-xl overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#7A4652] via-[#8E5763] to-[#A46F79] text-canvas shadow-luxe-lg ring-1 ring-white/15">
+            <AnimatePresence initial={false}>
+              {expanded && (
+                <motion.ul
+                  key="list"
+                  id="selection-list"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.35, ease: EASE }}
+                  className="max-h-[45vh] overflow-y-auto border-b border-white/15 px-3 pt-3"
+                >
+                  {items.map((item) => {
+                    const range = getPriceRange(item);
+                    return (
+                      <li key={item.id} className="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-white/10">
+                        <span className="min-w-0 flex-1 truncate text-[14px]">{item.title}</span>
+                        <span className="shrink-0 text-[13px] tabular-nums text-canvas/80">
+                          {formatPriceRange(range.min, range.max)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => selection.remove(item.id)}
+                          aria-label={`${item.title} verwijderen`}
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-canvas/80 transition-colors hover:bg-white/15 hover:text-canvas ${FOCUS}`}
+                        >
+                          <X size={15} aria-hidden="true" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                  <li className="flex justify-end px-2 pb-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={selection.clear}
+                      className={`rounded-full px-3 py-1 text-[12px] text-canvas/70 underline-offset-4 hover:text-canvas hover:underline ${FOCUS}`}
+                    >
+                      Alles wissen
+                    </button>
+                  </li>
+                </motion.ul>
+              )}
+            </AnimatePresence>
+
+            <div className="flex items-center gap-3 p-2 pl-3">
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-controls="selection-list"
+                onClick={() => setExpanded((value) => !value)}
+                className={`flex min-w-0 flex-1 items-center gap-3 rounded-[1.25rem] px-2 py-1.5 text-left transition-colors hover:bg-white/10 ${FOCUS}`}
+              >
+                <motion.span
+                  key={items.length}
+                  initial={{ scale: 0.7 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/95 font-serif text-lg text-accent-dark"
+                >
+                  {items.length}
+                </motion.span>
+                <span className="min-w-0">
+                  <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-canvas/75">
+                    Jouw afspraak
+                  </span>
+                  <span className="block truncate text-[14px]">
+                    {formatPriceRange(price.min, price.max)} · {formatDurationRange(duration.min, duration.max)}
+                  </span>
+                </span>
+                <ChevronUp
+                  size={16}
+                  aria-hidden="true"
+                  className={`ml-auto shrink-0 text-canvas/70 transition-transform duration-300 ${expanded ? '' : 'rotate-180'}`}
+                />
+              </button>
+              <Link
+                href={bookingHref(selection.ids)}
+                className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-canvas px-4 text-[13px] font-medium text-accent-dark shadow-sm transition-colors hover:bg-white sm:px-5 ${FOCUS}`}
+              >
+                <span className="hidden sm:inline">Verder naar datum</span>
+                <span className="sm:hidden">Verder</span>
+                <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -503,13 +735,7 @@ function DialogBody({
         </p>
 
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-          <Link
-            href={bookItemHref(item)}
-            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-[14px] font-medium text-white shadow-sm transition-colors hover:bg-accent-dark ${FOCUS}`}
-          >
-            <CalendarPlus size={16} aria-hidden="true" />
-            Boek deze behandeling
-          </Link>
+          <PickButton item={item} size="lg" />
           <button
             type="button"
             onClick={onClose}
@@ -527,6 +753,12 @@ function DialogBody({
 
 export default function TreatmentCatalog({ categories }: { categories: readonly TreatmentCategory[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const byId = useMemo(
+    () => new Map(categories.flatMap((category) => category.treatments.map((item) => [item.id, item] as const))),
+    [categories],
+  );
+  const validIds = useMemo(() => new Set(byId.keys()), [byId]);
+  const selection = useSelectionState(validIds);
   const [selected, setSelected] = useState<Selected | null>(null);
   const close = useCallback(() => setSelected(null), []);
 
@@ -537,7 +769,7 @@ export default function TreatmentCatalog({ categories }: { categories: readonly 
   }, [categories]);
 
   return (
-    <>
+    <SelectionContext.Provider value={selection}>
       <nav aria-label="Categorieën" className="mt-10 flex flex-wrap gap-2">
         {categories.map((category) => (
           <a
@@ -568,7 +800,11 @@ export default function TreatmentCatalog({ categories }: { categories: readonly 
         ))}
       </div>
 
+      {/* Ruimte zodat de zwevende balk de laatste kaart niet bedekt. */}
+      {selection.ids.length > 0 && <div aria-hidden="true" className="h-24" />}
+
+      <SelectionBar byId={byId} />
       <InfoDialog selected={selected} onClose={close} />
-    </>
+    </SelectionContext.Provider>
   );
 }
