@@ -4,9 +4,14 @@ import type { Database } from '@/lib/database.types';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY moeten zijn ingesteld.',
+/** True als de Supabase-sleutels ingesteld zijn. Zonder sleutels werken login en boeken niet. */
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+if (!isSupabaseConfigured) {
+  // Niet gooien: anders faalt de hele build (elke pagina laadt deze module via de layout).
+  // De site bouwt dan wel, maar login, boeken en tarieven uit de database werken niet.
+  console.error(
+    'NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY ontbreken. Stel ze in bij de hosting.',
   );
 }
 
@@ -14,4 +19,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Browser-client. Sessies worden in de browser bewaard, dus er is geen server-tussenkomst.
  * Gebruik nooit de service-role key in deze applicatie.
  */
-export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+export const supabase = createBrowserClient<Database>(
+  supabaseUrl || 'https://supabase-niet-geconfigureerd.invalid',
+  supabaseAnonKey || 'ontbreekt',
+);

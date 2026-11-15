@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 /** Mededelingsbanner bovenaan de site. Aan/uit en tekst komen uit public.site_settings (beheer in /admin). */
 export default function AnnouncementBanner() {
@@ -10,6 +10,7 @@ export default function AnnouncementBanner() {
   const [text, setText] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
     let cancelled = false;
     supabase
       .from('site_settings')

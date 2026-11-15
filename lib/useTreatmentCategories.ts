@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchTreatmentCategories } from '@/lib/services';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { TREATMENT_CATEGORIES, type TreatmentCategory } from '@/lib/treatments';
 
 /**
@@ -17,6 +17,10 @@ export function useTreatmentCategories(): {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoaded(true);
+      return;
+    }
     let cancelled = false;
     fetchTreatmentCategories(supabase).then((result) => {
       if (cancelled) return;
