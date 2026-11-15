@@ -46,6 +46,8 @@ export type BookingRow = {
   inspiration_path: string | null;
   photo_social_consent: boolean;
   client_notes: string | null;
+  /** Ontwerp uit /designer, gevalideerd in de database. */
+  nail_design: Json | null;
   created_at: string;
 };
 
@@ -71,7 +73,7 @@ export type DateOverrideRow = {
 
 export type ServiceRow = {
   id: string;
-  category_id: 'nails' | 'waxing' | 'hair';
+  category_id: 'nails' | 'waxing' | 'hair' | 'massage';
   group_name: string | null;
   title: string;
   sort_order: number;
@@ -155,6 +157,7 @@ export type Database = {
           p_reference_now_path: string | null;
           p_inspiration_path: string | null;
           p_photo_social_consent: boolean;
+          p_nail_design?: Json | null;
         };
         Returns: BookingRow;
       };

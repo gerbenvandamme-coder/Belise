@@ -69,7 +69,7 @@ export function parseDesign(value: unknown): ParsedDesign {
   };
 }
 
-/** Leesbare regels voor de e-mail aan de eigenares. */
+/** Leesbare regels voor de boeking en de agenda van de eigenares. */
 export function describeDesign(design: NailDesign): [label: string, value: string][] {
   const usesAccent = design.pattern !== 'solid' || design.accentRingOnly;
 

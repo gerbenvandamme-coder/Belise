@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Phone } from 'lucide-react';
 import PhotoThumbs from '@/components/admin/PhotoThumbs';
+import { describeDesign, parseDesign } from '@/lib/bookings/design';
 import { supabase } from '@/lib/supabase';
 import { toDateKey } from '@/lib/schedule';
 import type { AdminProfileRow, BookingRow, BookingStatus } from '@/lib/database.types';
@@ -196,6 +197,8 @@ function BookingCard({ booking, profile, busy, onStatus }: BookingCardProps) {
   const phone = profile?.phone ?? null;
   const photoPaths = [booking.reference_now_path, booking.inspiration_path];
   const hasPhotos = photoPaths.some(Boolean);
+  const parsedDesign = parseDesign(booking.nail_design);
+  const nailDesign = parsedDesign.ok ? parsedDesign.design : null;
 
   return (
     <article className={`${CARD_CLASS} space-y-4`}>
@@ -241,6 +244,27 @@ function BookingCard({ booking, profile, busy, onStatus }: BookingCardProps) {
 
       {booking.client_notes && (
         <p className="text-sm text-primary/80">Opmerking klant: {booking.client_notes}</p>
+      )}
+
+      {nailDesign && (
+        <div className="rounded-2xl bg-canvas p-4 ring-1 ring-taupe/30">
+          <p className="flex items-center gap-2 text-sm font-medium text-primary">
+            <span
+              aria-hidden="true"
+              className="h-4 w-4 rounded-full ring-1 ring-primary/15"
+              style={{ backgroundColor: nailDesign.baseColor }}
+            />
+            Nagelontwerp uit de designer
+          </p>
+          <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+            {describeDesign(nailDesign).map(([label, value]) => (
+              <div key={label} className="contents">
+                <dt className="text-primary/55">{label}</dt>
+                <dd className="text-primary">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       )}
 
       {hasPhotos && (

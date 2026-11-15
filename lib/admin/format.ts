@@ -32,7 +32,9 @@ export function parseTreatments(value: Json): TreatmentLine[] {
     const title =
       typeof item.title === 'string' && item.title.trim() ? item.title : 'Onbekende behandeling';
     const label = isLengthOption(item.length) ? `${title} (${LENGTH_LABELS[item.length]})` : title;
-    const priceEuro = typeof item.priceEuro === 'number' ? item.priceEuro : null;
+    // Boekingen bewaren price_euro (create_booking); priceEuro blijft ondersteund voor oudere rijen.
+    const rawPrice = item.price_euro ?? item.priceEuro;
+    const priceEuro = typeof rawPrice === 'number' ? rawPrice : null;
 
     return [{ label, priceEuro }];
   });

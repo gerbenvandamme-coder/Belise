@@ -7,6 +7,9 @@ import { ArrowLeft, Check, Clock, X } from 'lucide-react';
 import BookingCalendar from '@/components/BookingCalendar';
 import PhotoDropzone from '@/components/PhotoDropzone';
 import TimeSlotPicker from '@/components/TimeSlotPicker';
+import { describeDesign } from '@/lib/bookings/design';
+import type { NailDesign } from '@/lib/bookings/types';
+import { clearNailDesign, loadNailDesign } from '@/lib/nailDesignHandoff';
 import { clearPendingBooking, loadPendingBooking, savePendingBooking } from '@/lib/pendingBooking';
 import { toDateKey } from '@/lib/schedule';
 import { supabase } from '@/lib/supabase';
@@ -29,6 +32,7 @@ import {
   type TreatmentCategory,
   type TreatmentCategoryId,
   type TreatmentItem,
+  visibleCategories,
 } from '@/lib/treatments';
 
 type BookableTreatment = TreatmentItem & {
@@ -275,7 +279,8 @@ function BookingSummary({
 function BookingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { categories, loaded: categoriesLoaded } = useTreatmentCategories();
+  const { categories: allCategories, loaded: categoriesLoaded } = useTreatmentCategories();
+  const categories = useMemo(() => visibleCategories(allCategories), [allCategories]);
   const bookableById = useMemo(() => buildBookableIndex(categories), [categories]);
   const [initial] = useState(() =>
     getInitialSelection(searchParams.get('category'), searchParams.get('item')),
@@ -314,6 +319,17 @@ function BookingFlow() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [resumed, setResumed] = useState(false);
+
+  // Ontwerp uit /designer, als de klant dat net gemaakt heeft.
+  const [nailDesign, setNailDesign] = useState<NailDesign | null>(null);
+  useEffect(() => {
+    setNailDesign(loadNailDesign());
+  }, []);
+
+  function removeNailDesign() {
+    clearNailDesign();
+    setNailDesign(null);
+  }
   const [nowPhoto, setNowPhoto] = useState<File | null>(null);
   const [inspirationPhoto, setInspirationPhoto] = useState<File | null>(null);
 
@@ -513,6 +529,7 @@ function BookingFlow() {
         p_reference_now_path: referenceNowPath,
         p_inspiration_path: inspirationPath,
         p_photo_social_consent: form.photoSocialConsent,
+        p_nail_design: nailDesign,
       });
 
       if (rpcError) {
@@ -524,6 +541,7 @@ function BookingFlow() {
       }
 
       clearPendingBooking();
+      clearNailDesign();
       setConfirmationEmail(user.email ?? 'je account');
     } catch {
       setError('Geen verbinding met de server. Probeer het opnieuw.');
@@ -771,6 +789,40 @@ function BookingFlow() {
                 className={INPUT_CLASS}
               />
             </label>
+
+            {nailDesign && (
+              <section
+                aria-label="Je nagelontwerp"
+                className="rounded-2xl bg-accent-soft/50 p-5 ring-1 ring-accent/20"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="h-8 w-8 shrink-0 rounded-full ring-1 ring-primary/10"
+                      style={{ backgroundColor: nailDesign.baseColor }}
+                    />
+                    <p className="text-sm font-medium text-primary">Je ontwerp uit de designer gaat mee</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeNailDesign}
+                    disabled={submitting}
+                    className={`shrink-0 text-xs text-primary/60 underline-offset-4 hover:text-accent-dark hover:underline ${FOCUS_RING}`}
+                  >
+                    Verwijderen
+                  </button>
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  {describeDesign(nailDesign).map(([label, value]) => (
+                    <div key={label} className="contents">
+                      <dt className="text-primary/55">{label}</dt>
+                      <dd className="text-primary">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
 
             {userId && (
               <>

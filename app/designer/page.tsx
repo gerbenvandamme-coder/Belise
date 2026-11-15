@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Download, MessageCircle, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { CalendarCheck, Download, MessageCircle, X } from 'lucide-react';
 import NailCanvas from '@/components/NailCanvas';
 import NailControls, {
   DEFAULT_NAIL_CONFIG,
@@ -11,6 +12,7 @@ import NailControls, {
   PATTERN_OPTIONS,
   type NailConfig,
 } from '@/components/NailControls';
+import { saveNailDesign } from '@/lib/nailDesignHandoff';
 
 const DOWNLOAD_FILE_NAME = 'belise-manicure-ontwerp.png';
 /** Zonder nummer opent wa.me de WhatsApp-keuze, zodat de klant zelf het salon-contact kiest. */
@@ -69,12 +71,19 @@ function SummaryCard({ rows }: { rows: readonly SummaryRow[] }) {
 }
 
 export default function DesignerPage() {
+  const router = useRouter();
   const [config, setConfig] = useState<NailConfig>(DEFAULT_NAIL_CONFIG);
   const previewRef = useRef<HTMLElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   const summary = buildSummary(config);
   const whatsappUrl = buildWhatsAppUrl(summary);
+
+  const handleBook = () => {
+    saveNailDesign(config);
+    dialogRef.current?.close();
+    router.push('/booking?category=nails&design=1');
+  };
 
   const handleDownload = () => {
     const canvas = previewRef.current?.querySelector<HTMLCanvasElement>('canvas');
@@ -161,21 +170,30 @@ export default function DesignerPage() {
           </div>
 
           <p className="mt-3 text-sm leading-relaxed text-primary/70">
-            Laat deze samenvatting zien in de salon of stuur hem vooraf door.
+            Boek je afspraak met dit ontwerp erbij, dan ziet Belise het meteen in haar agenda.
           </p>
 
           <div className="mt-6">
             <SummaryCard rows={summary} />
           </div>
 
+          <button
+            type="button"
+            onClick={handleBook}
+            className={`${ACTION_BUTTON} mt-8 w-full bg-accent text-white shadow-sm hover:bg-accent-dark hover:shadow-md`}
+          >
+            <CalendarCheck size={16} aria-hidden="true" />
+            Boek dit design
+          </button>
+
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${ACTION_BUTTON} mt-8 w-full bg-accent text-white shadow-sm hover:bg-accent-dark hover:shadow-md`}
+            className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full py-2 text-sm text-primary/70 underline-offset-4 hover:text-accent-dark hover:underline ${FOCUS_RING}`}
           >
-            <MessageCircle size={16} aria-hidden="true" />
-            Boek deze behandeling
+            <MessageCircle size={14} aria-hidden="true" />
+            Liever eerst een vraag stellen via WhatsApp
           </a>
         </div>
       </dialog>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Phone } from 'lucide-react';
+import DecemberCounter from '@/components/admin/DecemberCounter';
 import PhotoThumbs from '@/components/admin/PhotoThumbs';
 import { supabase } from '@/lib/supabase';
 import {
@@ -79,6 +80,8 @@ export default function CustomersTab() {
 
   return (
     <div className="space-y-6">
+      <DecemberCounter profiles={profiles} />
+
       <label className="block text-sm text-primary/80">
         Zoek op naam, e-mail of telefoon
         <input

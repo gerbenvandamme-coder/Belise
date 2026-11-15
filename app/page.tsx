@@ -5,6 +5,7 @@ import { ArrowRight, Palette } from 'lucide-react';
 import NailCarouselShowcase from '@/components/NailCarouselShowcase';
 import {
   TREATMENT_CATEGORIES,
+  visibleCategories,
   formatDurationRange,
   formatPrice,
   formatPriceRange,
@@ -65,6 +66,7 @@ function TreatmentCard({ category }: { category: TreatmentCategory }) {
       aria-labelledby={headingId}
       className="group flex h-full flex-col overflow-hidden rounded-3xl bg-card shadow-[0_20px_40px_-30px_rgba(28,25,23,0.3)] ring-1 ring-taupe/25 transition-shadow duration-300 hover:ring-accent/40 hover:shadow-[0_28px_50px_-28px_rgba(28,25,23,0.4)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-taupe motion-reduce:transition-none"
     >
+      {category.image ? (
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <Image
           src={category.image}
@@ -78,8 +80,13 @@ function TreatmentCard({ category }: { category: TreatmentCategory }) {
           className="pointer-events-none absolute inset-x-0 -bottom-px h-3/4 bg-gradient-to-b from-card/0 via-card/60 to-card"
         />
       </div>
+      ) : (
+        <div aria-hidden="true" className="h-8" />
+      )}
 
-      <div className="relative z-10 -mt-14 flex flex-1 flex-col px-8 pb-8">
+      <div
+        className={`relative z-10 flex flex-1 flex-col px-8 pb-8 ${category.image ? '-mt-14' : ''}`}
+      >
         <h3
           id={headingId}
           className="font-serif text-2xl font-bold leading-tight tracking-[-0.01em] text-stone-900"
@@ -129,7 +136,9 @@ function TreatmentCard({ category }: { category: TreatmentCategory }) {
 
 export default async function HomePage() {
   const client = createPublicSupabase();
-  const categories = client ? await fetchTreatmentCategories(client) : TREATMENT_CATEGORIES;
+  const categories = visibleCategories(
+    client ? await fetchTreatmentCategories(client) : TREATMENT_CATEGORIES,
+  );
 
   return (
     <main id="top" className="flex-1">
@@ -205,7 +214,12 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div id="tarieven" className="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div
+            id="tarieven"
+            className={`mt-14 grid gap-8 md:grid-cols-2 ${
+              categories.length === 4 ? 'xl:grid-cols-4' : 'lg:grid-cols-3'
+            }`}
+          >
             {categories.map((category) => (
               <TreatmentCard key={category.id} category={category} />
             ))}

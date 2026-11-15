@@ -1,4 +1,4 @@
-export type TreatmentCategoryId = 'nails' | 'waxing' | 'hair';
+export type TreatmentCategoryId = 'nails' | 'waxing' | 'hair' | 'massage';
 
 export const LENGTH_OPTIONS = ['short', 'medium', 'long'] as const;
 export type LengthOption = (typeof LENGTH_OPTIONS)[number];
@@ -32,8 +32,8 @@ export type TreatmentCategory = {
   id: TreatmentCategoryId;
   title: string;
   subtitle: string;
-  /** URL-pad vanuit public/. De bestanden staan in public/assets/treatments/. */
-  image: string;
+  /** URL-pad vanuit public/. De bestanden staan in public/assets/treatments/. Null: geen foto (nog). */
+  image: string | null;
   treatments: readonly TreatmentItem[];
 };
 
@@ -238,7 +238,23 @@ export const TREATMENT_CATEGORIES: readonly TreatmentCategory[] = [
       },
     ],
   },
+  {
+    // Nieuw aanbod. De eigenares voegt de massages en prijzen toe in /admin (Tarieven & site).
+    // Zolang er geen actieve massage is, wordt deze categorie nergens getoond.
+    id: 'massage',
+    title: 'Massage',
+    subtitle: 'Even helemaal tot rust komen',
+    image: null,
+    treatments: [],
+  },
 ];
+
+/** Enkel categorieën met minstens één behandeling worden getoond op de site en in de boeker. */
+export function visibleCategories(
+  categories: readonly TreatmentCategory[],
+): readonly TreatmentCategory[] {
+  return categories.filter((category) => category.treatments.length > 0);
+}
 
 function pickLengthValue(value: LengthValue<number>, length: LengthOption | null): number {
   if (typeof value === 'number') return value;
