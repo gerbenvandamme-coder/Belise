@@ -28,7 +28,7 @@ export default async function HomePage() {
           <span aria-hidden="true" className="h-px w-8 bg-accent" />
           Beautysalon · Opwijk
         </p>
-        <div className="grid items-center gap-10 lg:grid-cols-[1.3fr_1fr] lg:gap-16">
+        <div className="mt-6 grid items-center gap-10 lg:mt-2 lg:grid-cols-[1.3fr_1fr] lg:gap-16">
           <h1 className="relative isolate max-w-full font-serif leading-none text-stone-900">
             {/* Zachte lichte waas achter de titel, zodat de marmeraders het logo niet doorkruisen. */}
             <span
@@ -51,6 +51,7 @@ export default async function HomePage() {
           </h1>
 
           <figure className="relative mx-auto w-full max-w-[19rem] sm:max-w-sm lg:ml-auto lg:mr-6 lg:max-w-[22rem]">
+            <div className="relative">
             {/* Verschoven kaderlijn achter de foto */}
             <div
               aria-hidden="true"
@@ -69,6 +70,7 @@ export default async function HomePage() {
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/40"
               />
+            </div>
             </div>
             <figcaption className="mt-8 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-primary/55">
               <span aria-hidden="true" className="hairline h-px flex-1" />
