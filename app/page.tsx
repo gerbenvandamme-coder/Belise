@@ -2,7 +2,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Palette } from 'lucide-react';
 import HomeCrossroads from '@/components/HomeCrossroads';
+import JsonLd from '@/components/JsonLd';
 import Ornament from '@/components/Ornament';
+import { pageSchema } from '@/lib/structuredData';
+import { SITE_DESCRIPTION } from '@/lib/site';
 import { TREATMENT_CATEGORIES, visibleCategories } from '@/lib/treatments';
 import { fetchTreatmentCategories } from '@/lib/services';
 import { loadCutouts } from '@/lib/showcase';
@@ -22,6 +25,7 @@ export default async function HomePage() {
 
   return (
     <main id="top" className="flex-1">
+      <JsonLd data={pageSchema({ path: '/', name: 'Belise Beauty – beautysalon in Opwijk', description: SITE_DESCRIPTION })} />
       {/* Hero */}
       <section className="mx-auto max-w-7xl px-6 pb-16 pt-12 lg:px-8 lg:pb-20 lg:pt-16">
         <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-accent-dark">

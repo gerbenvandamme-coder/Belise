@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import JsonLd from '@/components/JsonLd';
+import { pageMetadata } from '@/lib/seo';
+import { pageSchema } from '@/lib/structuredData';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, CalendarCheck, HeartHandshake, MapPin } from 'lucide-react';
@@ -6,10 +9,14 @@ import Ornament from '@/components/Ornament';
 import PageHeader from '@/components/PageHeader';
 import { ABOUT, SALON, isFilledIn } from '@/lib/salon';
 
-export const metadata: Metadata = {
-  title: 'Over Belise | Beautysalon in Opwijk',
-  description: 'Maak kennis met Belise: een beautysalon in Opwijk waar elke behandeling op afspraak en met aandacht gebeurt.',
-};
+const TITLE = 'Over Belise | Beautysalon in Opwijk';
+const DESCRIPTION =
+  'Maak kennis met Belise: een beautysalon in Opwijk waar elke behandeling op afspraak en met aandacht gebeurt.';
+
+const PATH = '/over';
+const TYPE = 'AboutPage';
+
+export const metadata: Metadata = pageMetadata(PATH, TITLE, DESCRIPTION);
 
 const PRINCIPLES = [
   {
@@ -34,6 +41,7 @@ export default function OverPage() {
 
   return (
     <main className="flex-1">
+      <JsonLd data={pageSchema({ path: PATH, name: TITLE, description: DESCRIPTION, type: TYPE })} />
       <section className="mx-auto max-w-6xl px-6 pb-14 pt-12 lg:px-8 lg:pb-20 lg:pt-16">
         <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
           <div>

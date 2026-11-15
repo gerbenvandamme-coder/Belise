@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import JsonLd from '@/components/JsonLd';
+import { pageMetadata } from '@/lib/seo';
+import { offerCatalogSchema, pageSchema } from '@/lib/structuredData';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Ornament from '@/components/Ornament';
@@ -8,10 +11,14 @@ import { fetchTreatmentCategories } from '@/lib/services';
 import { createPublicSupabase } from '@/lib/supabasePublic';
 import { TREATMENT_CATEGORIES, visibleCategories } from '@/lib/treatments';
 
-export const metadata: Metadata = {
-  title: 'Behandelingen & tarieven | Belise',
-  description: 'Alle behandelingen en tarieven van Belise: nagels, ontharing en haarverzorging.',
-};
+const TITLE = 'Behandelingen & tarieven | Belise Beauty Opwijk';
+const DESCRIPTION =
+  'Prijslijst van Belise in Opwijk: gelnagels, BIAB, ontharing met wax en haarverzorging (snit, kleuring, brushing), met prijs en duur per behandeling.';
+
+const PATH = '/behandelingen';
+const TYPE = 'WebPage';
+
+export const metadata: Metadata = pageMetadata(PATH, TITLE, DESCRIPTION);
 
 // Tarieven komen uit /admin en worden elke minuut ververst.
 export const revalidate = 60;
@@ -24,6 +31,8 @@ export default async function TreatmentsPage() {
 
   return (
     <main className="flex-1">
+      <JsonLd data={pageSchema({ path: PATH, name: TITLE, description: DESCRIPTION, type: TYPE })} />
+      <JsonLd data={offerCatalogSchema(categories)} />
       <section className="mx-auto max-w-7xl px-6 pb-16 pt-12 lg:px-8 lg:pb-20 lg:pt-16">
         <PageHeader
           eyebrow="Behandelingen & tarieven"

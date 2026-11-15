@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import JsonLd from '@/components/JsonLd';
+import { pageMetadata } from '@/lib/seo';
+import { pageSchema } from '@/lib/structuredData';
 import type { ReactNode } from 'react';
 import { Mail, MessageCircle, MessageSquareText, Phone } from 'lucide-react';
 import MapEmbed from '@/components/MapEmbed';
@@ -7,10 +10,14 @@ import Ornament from '@/components/Ornament';
 import PageHeader from '@/components/PageHeader';
 import { CONTACT, SALON, isFilledIn } from '@/lib/salon';
 
-export const metadata: Metadata = {
-  title: 'Contact | Belise',
-  description: 'Bel, WhatsApp of mail Belise, of stuur een bericht via je account.',
-};
+const TITLE = 'Contact & route | Belise Beauty Opwijk';
+const DESCRIPTION =
+  'Belise, Nanovestraat 71, 1745 Opwijk. Bel, stuur een sms, WhatsApp of mail, bekijk de route of stuur een bericht via je account.';
+
+const PATH = '/contact';
+const TYPE = 'ContactPage';
+
+export const metadata: Metadata = pageMetadata(PATH, TITLE, DESCRIPTION);
 
 const WHATSAPP_TEXT = 'Hallo Belise, ik heb een vraag:';
 
@@ -65,6 +72,7 @@ export default function ContactPage() {
 
   return (
     <main className="flex-1">
+      <JsonLd data={pageSchema({ path: PATH, name: TITLE, description: DESCRIPTION, type: TYPE })} />
       <section className="mx-auto max-w-6xl px-6 pb-12 pt-12 lg:px-8 lg:pt-16">
         <PageHeader
           eyebrow="Contact"

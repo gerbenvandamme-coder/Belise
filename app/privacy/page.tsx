@@ -1,18 +1,27 @@
 import type { Metadata } from 'next';
+import JsonLd from '@/components/JsonLd';
+import { pageMetadata } from '@/lib/seo';
+import { pageSchema } from '@/lib/structuredData';
 import Link from 'next/link';
 import LegalPage, { Fill, LegalSection } from '@/components/LegalPage';
 import { SALON } from '@/lib/salon';
 
-export const metadata: Metadata = {
-  title: 'Privacyverklaring | Belise',
-  description: 'Hoe Belise omgaat met je persoonsgegevens.',
-};
+const TITLE = 'Privacyverklaring | Belise';
+const DESCRIPTION =
+  'Hoe Belise omgaat met je persoonsgegevens.';
+
+const PATH = '/privacy';
+const TYPE = 'WebPage';
+
+export const metadata: Metadata = pageMetadata(PATH, TITLE, DESCRIPTION);
 
 const legal = SALON.legal;
 const isDraft = Object.values(legal).some((value) => value.startsWith('['));
 
 export default function PrivacyPage() {
   return (
+    <>
+    <JsonLd data={pageSchema({ path: PATH, name: TITLE, description: DESCRIPTION, type: TYPE })} />
     <LegalPage
       eyebrow="Privacy"
       title="Privacyverklaring"
@@ -157,5 +166,6 @@ export default function PrivacyPage() {
         </p>
       </LegalSection>
     </LegalPage>
+    </>
   );
 }

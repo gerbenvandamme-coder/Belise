@@ -5,6 +5,9 @@ import AnnouncementBanner from '@/components/AnnouncementBanner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MarbleBackground from '@/components/MarbleBackground';
+import JsonLd from '@/components/JsonLd';
+import { businessSchema, websiteSchema } from '@/lib/structuredData';
+import { CONTENT_UPDATED, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
 import './globals.css';
 
 // Gloock: hoog-contrast display-serif die aansluit bij het Belise-logo. Eén gewicht (400).
@@ -30,9 +33,28 @@ const sans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Belise | Beautysalon',
-  description:
-    'Belise is een beautysalon in Opwijk voor nagels, ontharing en haarverzorging. Boek online je afspraak.',
+  metadataBase: new URL(SITE_URL),
+  title: 'Belise Beauty | Beautysalon in Opwijk – nagels, ontharing en haar',
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: 'Beauty',
+  keywords: ['beautysalon Opwijk', 'gelnagels Opwijk', 'BIAB Opwijk', 'nagelstudio Opwijk', 'ontharing Opwijk', 'kapper Opwijk', 'Belise'],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'nl_BE',
+    siteName: SITE_NAME,
+    url: SITE_URL,
+    title: 'Belise Beauty | Beautysalon in Opwijk',
+    description: SITE_DESCRIPTION,
+    images: [{ url: '/assets/Front/Clean%20front%20picture.jpg', alt: 'Belise Beauty, beautysalon in Opwijk' }],
+  },
+  twitter: { card: 'summary_large_image' },
+  robots: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+  other: { 'article:modified_time': CONTENT_UPDATED, 'last-modified': CONTENT_UPDATED },
   icons: {
     icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
     apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
@@ -42,8 +64,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="nl" className={`${serif.variable} ${accent.variable} ${sans.variable}`}>
+    <html lang="nl-BE" className={`${serif.variable} ${accent.variable} ${sans.variable}`}>
       <body className="flex min-h-screen flex-col overflow-x-clip bg-canvas font-sans text-primary antialiased">
+        <JsonLd data={{ '@context': 'https://schema.org', '@graph': [businessSchema(), websiteSchema()] }} />
         <MarbleBackground />
         <AnnouncementBanner />
         <Navbar />

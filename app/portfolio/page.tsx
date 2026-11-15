@@ -1,14 +1,21 @@
 import type { Metadata } from 'next';
+import JsonLd from '@/components/JsonLd';
+import { pageMetadata } from '@/lib/seo';
+import { pageSchema } from '@/lib/structuredData';
 import PageHeader from '@/components/PageHeader';
 import PortfolioGallery from '@/components/PortfolioGallery';
 import { fetchPortfolio, fetchPortfolioFrames, NO_FRAMES, type PortfolioEntry } from '@/lib/portfolio';
 import { loadCutouts } from '@/lib/showcase';
 import { createPublicSupabase } from '@/lib/supabasePublic';
 
-export const metadata: Metadata = {
-  title: 'Portfolio | Belise',
-  description: 'Werk van Belise: nagels, haarverzorging en meer.',
-};
+const TITLE = 'Portfolio | Belise Beauty Opwijk';
+const DESCRIPTION =
+  'Recent werk van Belise in Opwijk: gelnagels, BIAB, nail art en haarverzorging, te filteren op stijl zoals French of chroom.';
+
+const PATH = '/portfolio';
+const TYPE = 'CollectionPage';
+
+export const metadata: Metadata = pageMetadata(PATH, TITLE, DESCRIPTION);
 
 // Nieuwe foto's uit /admin verschijnen binnen een minuut.
 export const revalidate = 60;
@@ -34,6 +41,7 @@ export default async function PortfolioPage() {
 
   return (
     <main className="flex-1">
+      <JsonLd data={pageSchema({ path: PATH, name: TITLE, description: DESCRIPTION, type: TYPE })} />
       <section className="mx-auto max-w-7xl px-6 pb-20 pt-12 lg:px-8 lg:pb-24 lg:pt-16">
         <PageHeader
           eyebrow="Portfolio"

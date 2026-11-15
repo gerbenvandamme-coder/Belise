@@ -1,12 +1,19 @@
 import type { Metadata } from 'next';
+import JsonLd from '@/components/JsonLd';
+import { pageMetadata } from '@/lib/seo';
+import { pageSchema } from '@/lib/structuredData';
 import Link from 'next/link';
 import LegalPage, { Fill, LegalSection } from '@/components/LegalPage';
 import { SALON } from '@/lib/salon';
 
-export const metadata: Metadata = {
-  title: 'Algemene voorwaarden | Belise',
-  description: 'De voorwaarden voor afspraken bij Belise.',
-};
+const TITLE = 'Algemene voorwaarden | Belise';
+const DESCRIPTION =
+  'De voorwaarden voor afspraken bij Belise.';
+
+const PATH = '/algemene-voorwaarden';
+const TYPE = 'WebPage';
+
+export const metadata: Metadata = pageMetadata(PATH, TITLE, DESCRIPTION);
 
 const legal = SALON.legal;
 // Het annuleringsbeleid is nog niet beslist; daarom blijft de pagina een concept.
@@ -16,6 +23,8 @@ const isDraft =
 
 export default function TermsPage() {
   return (
+    <>
+    <JsonLd data={pageSchema({ path: PATH, name: TITLE, description: DESCRIPTION, type: TYPE })} />
     <LegalPage
       eyebrow="Voorwaarden"
       title="Algemene voorwaarden"
@@ -148,5 +157,6 @@ export default function TermsPage() {
         </p>
       </LegalSection>
     </LegalPage>
+    </>
   );
 }
