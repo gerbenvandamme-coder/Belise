@@ -1,17 +1,25 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
+import { Gloock, Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MarbleBackground from '@/components/MarbleBackground';
 import './globals.css';
 
-// Playfair Display: elegante, warme luxe-serif met echte cursief. Variabel gewicht (400-900).
-const serif = Playfair_Display({
+// Gloock: hoog-contrast display-serif die aansluit bij het Belise-logo. Eén gewicht (400).
+const serif = Gloock({
   subsets: ['latin'],
-  style: ['normal', 'italic'],
+  weight: '400',
   variable: '--font-serif',
+  display: 'swap',
+});
+
+// Gloock heeft geen cursief. Cursieve accentwoorden in koppen gebruiken Playfair Display Italic.
+const accent = Playfair_Display({
+  subsets: ['latin'],
+  style: ['italic'],
+  variable: '--font-accent',
   display: 'swap',
 });
 
@@ -34,7 +42,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="nl" className={`${serif.variable} ${sans.variable}`}>
+    <html lang="nl" className={`${serif.variable} ${accent.variable} ${sans.variable}`}>
       <body className="flex min-h-screen flex-col overflow-x-clip bg-canvas font-sans text-primary antialiased">
         <MarbleBackground />
         <AnnouncementBanner />

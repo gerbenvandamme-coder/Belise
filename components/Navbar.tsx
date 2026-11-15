@@ -1,8 +1,9 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
@@ -40,6 +41,16 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const closeMenu = () => setIsOpen(false);
+
+  // Logo: op de homepage zacht naar boven scrollen, elders naar de homepage.
+  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    closeMenu();
+    if (pathname !== '/') return;
+    event.preventDefault();
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    if (window.location.hash) window.history.replaceState(null, '', '/');
+  };
   const isActive = (href: string) => href === pathname;
 
   // Alleen bij openen een vertraging; bij sluiten verdwijnt alles meteen samen met het paneel.
@@ -60,13 +71,21 @@ export default function Navbar() {
       >
         <Link
           href="/"
-          onClick={closeMenu}
-          className={`group flex items-center gap-2 font-serif text-2xl font-semibold tracking-[0.2em] text-primary ${FOCUS_RING}`}
+          onClick={handleLogoClick}
+          aria-label="Belise, naar boven"
+          className={`group flex items-center gap-2.5 ${FOCUS_RING}`}
         >
-          BELISE
+          <Image
+            src="/brand/belise-wordmark.png"
+            alt="Belise"
+            width={463}
+            height={162}
+            priority
+            className="h-8 w-auto sm:h-9"
+          />
           <span
             aria-hidden="true"
-            className="h-1.5 w-1.5 rounded-full bg-accent transition-transform duration-200 group-hover:scale-150 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            className="mt-2 h-1.5 w-1.5 rounded-full bg-accent transition-[transform,box-shadow] duration-300 ease-out group-hover:scale-125 group-hover:shadow-[0_0_8px_3px_rgba(176,58,91,0.55)] group-focus-visible:shadow-[0_0_8px_3px_rgba(176,58,91,0.55)] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         </Link>
 

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Clock, Instagram, MapPin } from 'lucide-react';
 import { SALON } from '@/lib/salon';
@@ -13,9 +14,13 @@ export default function Footer() {
       />
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-3 lg:px-8">
         <div>
-          <p className="font-serif text-2xl font-semibold tracking-[0.2em] text-primary">
-            {SALON.name}
-          </p>
+          <Image
+            src="/brand/belise-logo-full.png"
+            alt="Belise, all about beauty"
+            width={463}
+            height={196}
+            className="h-14 w-auto"
+          />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary/70">
             Beautysalon in Opwijk voor nagels, ontharing en haarverzorging, met aandacht voor elk
             detail.

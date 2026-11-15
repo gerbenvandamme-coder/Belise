@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 @layer components {
+  /* Gloock heeft één gewicht en geen cursief: laat de browser geen nep-vet of nep-cursief maken. */
+  .font-serif {
+    font-synthesis: none;
+  }
+  /* Cursieve accenten in koppen ("jou", "Beauty") in Playfair Display Italic. */
+  .font-serif .italic,
+  .font-serif.italic {
+    font-family: var(--font-accent), Georgia, serif;
+  }
+
   /* Dunne champagne-lijn die naar de uiteinden toe vervaagt. */
   .hairline {
     background: linear-gradient(90deg, transparent, rgba(212, 184, 165, 0.9), transparent);
