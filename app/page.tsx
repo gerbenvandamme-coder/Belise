@@ -29,9 +29,23 @@ export default async function HomePage() {
           Beautysalon · Opwijk
         </p>
         <div className="grid items-center gap-10 lg:grid-cols-[1.3fr_1fr] lg:gap-16">
-          <h1 className="relative max-w-full overflow-x-clip break-normal font-serif font-medium leading-[0.85] tracking-[-0.03em] text-stone-900">
-            <span className="block text-[length:clamp(3.5rem,13vw,11rem)]">Belise</span>
-            <span className="mt-1 block text-[length:clamp(2rem,7vw,6rem)] italic leading-none tracking-[0.02em] text-accent sm:mt-0">
+          <h1 className="relative isolate max-w-full font-serif leading-none text-stone-900">
+            {/* Zachte lichte waas achter de titel, zodat de marmeraders het logo niet doorkruisen. */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -inset-x-10 -inset-y-8 -z-10 rounded-[50%] bg-canvas/70 blur-2xl"
+            />
+            <Image
+              src="/brand/belise-wordmark-hero.png"
+              alt="Belise"
+              width={1852}
+              height={648}
+              priority
+              sizes="(min-width: 1024px) 30rem, 70vw"
+              className="block h-auto w-[clamp(15rem,62vw,30rem)] select-none"
+              draggable={false}
+            />
+            <span className="mt-3 block pl-[0.35em] text-[length:clamp(2rem,6vw,4.75rem)] font-normal italic leading-none tracking-[0.01em] text-accent">
               Beauty
             </span>
           </h1>
