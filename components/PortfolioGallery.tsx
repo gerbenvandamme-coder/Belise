@@ -12,7 +12,7 @@ import {
 } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { PortfolioCategoryId } from '@/lib/database.types';
-import { PORTFOLIO_CATEGORIES, type PortfolioEntry } from '@/lib/portfolio';
+import { PORTFOLIO_CATEGORIES, type PortfolioEntry, type PortfolioFrames } from '@/lib/portfolio';
 
 const FOCUS_RING =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
@@ -32,8 +32,8 @@ function shortestOffset(itemIndex: number, activeIndex: number, n: number) {
   return distance;
 }
 
-/** Coverflow met kaders: de actieve foto vooraan, buren kleiner en vervaagd. */
-function FramedCarousel({ items }: { items: readonly PortfolioEntry[] }) {
+/** Coverflow: de actieve foto vooraan, buren kleiner en vervaagd. Met of zonder kader. */
+function Carousel({ items, framed }: { items: readonly PortfolioEntry[]; framed: boolean }) {
   const n = items.length;
   const [index, setIndex] = useState(0);
   const [width, setWidth] = useState(0);
@@ -134,7 +134,13 @@ function FramedCarousel({ items }: { items: readonly PortfolioEntry[] }) {
                     if (!draggedRef.current && !isActive) goTo(itemIndex);
                   }}
                   style={{ pointerEvents: visible ? 'auto' : 'none' }}
-                  className={`shadow-luxe-lg relative aspect-[4/5] w-[min(64vw,19rem)] overflow-hidden rounded-[1.75rem] bg-card ring-1 ring-taupe/30 will-change-transform ${FOCUS_RING}`}
+                  className={`relative aspect-[4/5] w-[min(64vw,19rem)] will-change-transform ${
+                    framed
+                      ? 'shadow-luxe-lg overflow-hidden rounded-[1.75rem] bg-card ring-1 ring-taupe/30'
+                      : item.cutout
+                        ? 'rounded-3xl'
+                        : 'shadow-luxe overflow-hidden rounded-3xl'
+                  } ${FOCUS_RING}`}
                 >
                   {/* Plain img: portfoliofoto's komen uit Supabase Storage (extern domein). */}
                   <img
@@ -143,16 +149,25 @@ function FramedCarousel({ items }: { items: readonly PortfolioEntry[] }) {
                     loading={visible ? 'eager' : 'lazy'}
                     decoding="async"
                     draggable={false}
+                    style={
+                      !framed && item.cutout
+                        ? { filter: 'drop-shadow(0 18px 24px rgba(60, 40, 30, 0.18))' }
+                        : undefined
+                    }
                     className={`h-full w-full select-none ${
                       item.cutout
-                        ? 'bg-gradient-to-b from-blush/50 to-canvas object-contain p-6'
+                        ? framed
+                          ? 'bg-gradient-to-b from-blush/50 to-canvas object-contain p-6'
+                          : 'object-contain'
                         : 'object-cover'
                     }`}
                   />
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-2.5 rounded-[1.35rem] border border-white/50"
-                  />
+                  {framed && (
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-2.5 rounded-[1.35rem] border border-white/50"
+                    />
+                  )}
                 </motion.button>
               </div>
             );
@@ -203,7 +218,13 @@ function FramedCarousel({ items }: { items: readonly PortfolioEntry[] }) {
   );
 }
 
-export default function PortfolioGallery({ entries }: { entries: readonly PortfolioEntry[] }) {
+export default function PortfolioGallery({
+  entries,
+  frames,
+}: {
+  entries: readonly PortfolioEntry[];
+  frames: PortfolioFrames;
+}) {
   const counts = useMemo(() => {
     const map = new Map<PortfolioCategoryId, number>();
     for (const entry of entries) map.set(entry.categoryId, (map.get(entry.categoryId) ?? 0) + 1);
@@ -293,7 +314,7 @@ export default function PortfolioGallery({ entries }: { entries: readonly Portfo
 
       <div className="mt-8">
         {visible.length > 0 ? (
-          <FramedCarousel key={`${categoryId}-${tag ?? 'all'}`} items={visible} />
+          <Carousel key={`${categoryId}-${tag ?? 'all'}`} items={visible} framed={frames[categoryId]} />
         ) : (
           <div className="mx-auto flex max-w-md flex-col items-center rounded-[1.75rem] border border-dashed border-taupe/60 bg-card/60 px-8 py-14 text-center">
             <span aria-hidden="true" className="h-2 w-2 rotate-45 border border-taupe" />

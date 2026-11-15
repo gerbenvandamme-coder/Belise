@@ -3,8 +3,16 @@
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Trash2, Upload, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { compressImage } from '@/lib/supabaseStorage';
-import { PORTFOLIO_BUCKET, PORTFOLIO_CATEGORIES, normalizeTag } from '@/lib/portfolio';
+import { compressImage, hasTransparency } from '@/lib/supabaseStorage';
+import {
+  NO_FRAMES,
+  PORTFOLIO_BUCKET,
+  PORTFOLIO_CATEGORIES,
+  frameSettingKey,
+  normalizeTag,
+  parseFrames,
+  type PortfolioFrames,
+} from '@/lib/portfolio';
 import type { PortfolioCategoryId, PortfolioItemRow } from '@/lib/database.types';
 import {
   BUTTON_PRIMARY,
@@ -106,6 +114,10 @@ export default function PortfolioTab() {
   const [newTags, setNewTags] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [transparent, setTransparent] = useState(false);
+
+  const [frames, setFrames] = useState<PortfolioFrames>({ ...NO_FRAMES });
+  const [framesStatus, setFramesStatus] = useState<string | null>(null);
 
   const [filter, setFilter] = useState<PortfolioCategoryId | 'all'>('all');
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -131,6 +143,40 @@ export default function PortfolioTab() {
     };
   }, [reload]);
 
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('site_settings')
+      .select('key, value')
+      .in('key', PORTFOLIO_CATEGORIES.map((category) => frameSettingKey(category.id)))
+      .then(({ data }) => {
+        if (!cancelled) setFrames(parseFrames(data));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function setFrame(id: PortfolioCategoryId, on: boolean) {
+    const previous = frames;
+    setFrames({ ...frames, [id]: on });
+    setFramesStatus(null);
+    const { error: saveError } = await supabase
+      .from('site_settings')
+      .upsert({ key: frameSettingKey(id), value: String(on) }, { onConflict: 'key' });
+    if (saveError) {
+      setFrames(previous);
+      setFramesStatus('Opslaan mislukt. Probeer opnieuw.');
+      return;
+    }
+    setFramesStatus('Opgeslagen. De website past zich binnen een minuut aan.');
+  }
+
+  async function handleFileChange(selected: File | null) {
+    setFile(selected);
+    setTransparent(selected ? await hasTransparency(selected) : false);
+  }
+
   const allTags = useMemo(
     () => Array.from(new Set((items ?? []).flatMap((item) => item.tags))).sort(),
     [items],
@@ -145,8 +191,8 @@ export default function PortfolioTab() {
     setUploading(true);
     setUploadStatus(null);
     try {
-      const blob = await compressImage(file);
-      const extension = blob.type === 'image/webp' ? 'webp' : 'jpg';
+      const blob = await compressImage(file, { keepAlpha: transparent });
+      const extension = blob.type === 'image/webp' ? 'webp' : blob.type === 'image/png' ? 'png' : 'jpg';
       const path = `${categoryId}/${crypto.randomUUID()}.${extension}`;
       const { error: storageError } = await supabase.storage
         .from(PORTFOLIO_BUCKET)
@@ -158,6 +204,7 @@ export default function PortfolioTab() {
         image_path: path,
         title: title.trim() || null,
         tags: newTags,
+        has_transparency: transparent,
       });
       if (insertError) {
         await supabase.storage.from(PORTFOLIO_BUCKET).remove([path]);
@@ -165,6 +212,7 @@ export default function PortfolioTab() {
       }
 
       setFile(null);
+      setTransparent(false);
       setTitle('');
       setNewTags([]);
       setUploadStatus('Foto toegevoegd aan het portfolio.');
@@ -207,6 +255,47 @@ export default function PortfolioTab() {
 
   return (
     <div className="space-y-8">
+      <section aria-labelledby="frames-heading" className="space-y-3">
+        <h2 id="frames-heading" className={SECTION_LABEL}>
+          Weergave op de website
+        </h2>
+        <div className={`${CARD_CLASS} space-y-1`}>
+          <p className="pb-2 text-sm leading-relaxed text-primary/70">
+            Kies per categorie of de foto&apos;s in een kader staan. Zonder kader komen uitgeknipte
+            PNG&apos;s vrij op de pagina te staan; gewone foto&apos;s krijgen enkel afgeronde hoeken.
+          </p>
+          {PORTFOLIO_CATEGORIES.map((category) => (
+            <div
+              key={category.id}
+              className="flex items-center justify-between gap-3 border-t border-taupe/30 py-3"
+            >
+              <span className="font-medium text-primary">{category.title}: kader tonen</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={frames[category.id]}
+                aria-label={`Kader tonen bij ${category.title.toLowerCase()}`}
+                onClick={() => void setFrame(category.id, !frames[category.id])}
+                className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${FOCUS_RING} ${
+                  frames[category.id] ? 'bg-accent' : 'bg-taupe/60'
+                }`}
+              >
+                <span
+                  className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+                    frames[category.id] ? 'translate-x-6' : ''
+                  }`}
+                />
+              </button>
+            </div>
+          ))}
+          {framesStatus && (
+            <p role="status" className="pt-2 text-sm text-primary/80">
+              {framesStatus}
+            </p>
+          )}
+        </div>
+      </section>
+
       <section aria-labelledby="upload-heading" className="space-y-3">
         <h2 id="upload-heading" className={SECTION_LABEL}>
           Foto toevoegen
@@ -217,10 +306,36 @@ export default function PortfolioTab() {
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              onChange={(event) => void handleFileChange(event.target.files?.[0] ?? null)}
               className={`mt-2 block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-accent-soft file:px-4 file:py-2 file:text-accent-dark ${FOCUS_RING}`}
             />
           </label>
+          {transparent && (
+            <div role="status" className="rounded-2xl bg-accent-soft/60 px-4 py-3 text-sm text-primary/85">
+              <p className="font-medium text-accent-dark">Uitgeknipte PNG herkend</p>
+              <p className="mt-1 text-[13px] leading-relaxed">
+                Deze foto heeft een doorzichtige achtergrond en komt het mooist uit zonder kader.
+                {frames[categoryId] ? (
+                  <>
+                    {' '}
+                    Bij {PORTFOLIO_CATEGORIES.find((c) => c.id === categoryId)?.title.toLowerCase()} staat
+                    het kader nu aan.
+                  </>
+                ) : (
+                  <> Bij deze categorie staat het kader al uit.</>
+                )}
+              </p>
+              {frames[categoryId] && (
+                <button
+                  type="button"
+                  onClick={() => void setFrame(categoryId, false)}
+                  className={`${BUTTON_SECONDARY} mt-3`}
+                >
+                  Kader uitzetten voor deze categorie
+                </button>
+              )}
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm text-primary/80">
               Categorie
@@ -304,7 +419,7 @@ export default function PortfolioTab() {
                   src={publicUrl(item.image_path)}
                   alt={item.title ?? ''}
                   loading="lazy"
-                  className={`h-full w-full object-cover ${item.is_published ? '' : 'opacity-50 grayscale'}`}
+                  className={`h-full w-full ${item.has_transparency ? 'object-contain p-3' : 'object-cover'} ${item.is_published ? '' : 'opacity-50 grayscale'}`}
                 />
                 {!item.is_published && (
                   <span className="absolute left-3 top-3 rounded-full bg-primary/80 px-2.5 py-1 text-[11px] text-canvas">

@@ -30,7 +30,7 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | n
  * Browsers die geen WebP kunnen schrijven, vallen terug op JPEG.
  * Alles gebeurt lokaal in de browser; het bestand verlaat het apparaat pas bij de upload.
  */
-export async function compressImage(file: File): Promise<Blob> {
+export async function compressImage(file: File, options: { keepAlpha?: boolean } = {}): Promise<Blob> {
   if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
     throw new Error('Alleen JPEG, PNG of WebP zijn toegestaan.');
   }
@@ -62,11 +62,49 @@ export async function compressImage(file: File): Promise<Blob> {
       return webp;
     }
 
+    // JPEG kent geen transparantie: bij een uitgeknipte foto wijken we uit naar PNG.
+    if (options.keepAlpha) {
+      const png = await canvasToBlob(canvas, 'image/png');
+      if (png && png.type === 'image/png') return png;
+    }
+
     const jpeg = await canvasToBlob(canvas, 'image/jpeg');
     if (!jpeg) {
       throw new Error('Afbeelding kon niet worden verwerkt.');
     }
     return jpeg;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+/**
+ * Controleert of een PNG of WebP echte transparantie bevat (een uitgeknipte foto).
+ * Leest een verkleinde kopie lokaal in de browser; de foto verlaat het apparaat niet.
+ */
+export async function hasTransparency(file: File): Promise<boolean> {
+  if (file.type !== 'image/png' && file.type !== 'image/webp') return false;
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await loadImage(objectUrl);
+    const longest = Math.max(image.naturalWidth, image.naturalHeight);
+    if (longest === 0) return false;
+    const scale = Math.min(1, 160 / longest);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return false;
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+    let transparent = 0;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] < 250) transparent += 1;
+    }
+    // Minstens 2% van de pixels doorzichtig: een los uitgeknipt object, geen toevallige rand.
+    return transparent / (data.length / 4) >= 0.02;
+  } catch {
+    return false;
   } finally {
     URL.revokeObjectURL(objectUrl);
   }

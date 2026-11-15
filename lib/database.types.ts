@@ -100,6 +100,8 @@ export type PortfolioItemRow = {
   tags: string[];
   sort_order: number;
   is_published: boolean;
+  /** Uitgeknipte foto met doorzichtige achtergrond (PNG). Wordt zonder bijsnijden getoond. */
+  has_transparency: boolean;
   created_at: string;
 };
 
