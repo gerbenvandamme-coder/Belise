@@ -39,7 +39,7 @@ export default async function TreatmentsPage() {
           </p>
         </PageHeader>
 
-        <TreatmentMenu categories={categories} />
+        <TreatmentMenu categories={categories} eager />
       </section>
 
       <Ornament className="px-6" />

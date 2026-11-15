@@ -129,7 +129,15 @@ function GroupAccordion({
   );
 }
 
-function TreatmentCard({ category, index }: { category: TreatmentCategory; index: number }) {
+function TreatmentCard({
+  category,
+  index,
+  eager,
+}: {
+  category: TreatmentCategory;
+  index: number;
+  eager: boolean;
+}) {
   const groups = groupTreatments(category);
   const [openLabel, setOpenLabel] = useState<string | null>(null);
   const headingId = useId();
@@ -146,6 +154,7 @@ function TreatmentCard({ category, index }: { category: TreatmentCategory; index
             src={category.image}
             alt=""
             fill
+            priority={eager}
             sizes="(min-width: 1280px) 22vw, (min-width: 768px) 45vw, 100vw"
             className="ease-luxe object-cover transition-transform duration-700 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
@@ -207,8 +216,11 @@ function TreatmentCard({ category, index }: { category: TreatmentCategory; index
 
 export default function TreatmentMenu({
   categories,
+  eager = false,
 }: {
   categories: readonly TreatmentCategory[];
+  /** Foto's meteen laden (wanneer de kaarten bovenaan de pagina staan). */
+  eager?: boolean;
 }) {
   return (
     <div
@@ -217,7 +229,7 @@ export default function TreatmentMenu({
       }`}
     >
       {categories.map((category, index) => (
-        <TreatmentCard key={category.id} category={category} index={index} />
+        <TreatmentCard key={category.id} category={category} index={index} eager={eager} />
       ))}
     </div>
   );
