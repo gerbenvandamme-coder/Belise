@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Palette } from 'lucide-react';
 import NailCarouselShowcase from '@/components/NailCarouselShowcase';
+import Ornament from '@/components/Ornament';
 import {
   TREATMENT_CATEGORIES,
   visibleCategories,
@@ -64,7 +65,7 @@ function TreatmentCard({ category }: { category: TreatmentCategory }) {
     <Link
       href={`/booking?category=${category.id}`}
       aria-labelledby={headingId}
-      className="group flex h-full flex-col overflow-hidden rounded-3xl bg-card shadow-[0_20px_40px_-30px_rgba(28,25,23,0.3)] ring-1 ring-taupe/25 transition-shadow duration-300 hover:ring-accent/40 hover:shadow-[0_28px_50px_-28px_rgba(28,25,23,0.4)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-taupe motion-reduce:transition-none"
+      className="reveal shadow-luxe ease-luxe group flex h-full flex-col overflow-hidden rounded-3xl bg-card ring-1 ring-taupe/25 transition-[transform,box-shadow] duration-500 hover:-translate-y-1 hover:ring-taupe/50 hover:shadow-luxe-lg motion-reduce:hover:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-taupe motion-reduce:transition-none"
     >
       {category.image ? (
       <div className="relative aspect-[4/3] w-full overflow-hidden">
@@ -151,28 +152,39 @@ export default async function HomePage() {
         <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
           <h1 className="relative max-w-full overflow-x-clip break-normal font-serif font-medium leading-[0.85] tracking-[-0.03em] text-stone-900">
             <span className="block text-[length:clamp(3.5rem,13vw,11rem)]">Belise</span>
-            <span className="-mt-2 block text-[length:clamp(2rem,7vw,6rem)] italic leading-none tracking-[0.02em] text-accent sm:-mt-5">
+            <span className="mt-1 block text-[length:clamp(2rem,7vw,6rem)] italic leading-none tracking-[0.02em] text-accent sm:mt-0">
               Beauty
             </span>
           </h1>
 
-          <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-[2rem] shadow-[0_30px_60px_-30px_rgba(28,25,23,0.35)] ring-1 ring-taupe/30 lg:max-w-none">
-            <Image
-              src="/assets/Front/Clean%20front%20picture.jpg"
-              alt="Zaakvoerder van Belise"
-              fill
-              priority
-              sizes="(min-width: 1024px) 40vw, 90vw"
-              className="object-cover"
+          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+            {/* Verschoven kaderlijn achter de foto */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 translate-x-3 translate-y-3 rounded-[2rem] border border-taupe/70 sm:translate-x-5 sm:translate-y-5"
             />
+            <div className="shadow-luxe-lg relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] ring-1 ring-taupe/30">
+              <Image
+                src="/assets/Front/Clean%20front%20picture.jpg"
+                alt="Zaakvoerder van Belise"
+                fill
+                priority
+                sizes="(min-width: 1024px) 40vw, 90vw"
+                className="object-cover"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/40"
+              />
+            </div>
           </div>
         </div>
 
         <div className="mt-14 lg:mt-16">
           <div className="max-w-2xl">
             <p className="max-w-lg text-base leading-relaxed text-primary/70 sm:text-lg">
-              Bij Belise nemen we de tijd voor jou. Van make-up en haarstyling tot nagelverzorging
-              voor handen en voeten: elke behandeling wordt afgestemd op jouw stijl en je dagelijkse
+              Bij Belise nemen we de tijd voor jou. Van nagels en ontharing tot snit, kleur en
+              brushing: elke behandeling wordt afgestemd op jouw stijl en je dagelijkse
               leven.
             </p>
 
@@ -195,12 +207,16 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <Ornament className="px-6" />
+
       <NailCarouselShowcase />
 
       {/* Behandelingen & Prijzen */}
-      <section id="behandelingen" className="bg-blush/30 py-24 lg:py-32">
+      <section id="behandelingen" className="relative bg-blush/30 py-24 lg:py-32">
+        <div aria-hidden="true" className="hairline absolute inset-x-0 top-0 h-px" />
+        <div aria-hidden="true" className="hairline absolute inset-x-0 bottom-0 h-px" />
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="max-w-2xl">
+          <div className="reveal max-w-2xl">
             <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.1em] text-accent-dark">
               <span aria-hidden="true" className="h-px w-8 bg-accent" />
               Behandelingen & prijzen
@@ -229,7 +245,12 @@ export default async function HomePage() {
 
       {/* Teaser Nagel Designer */}
       <section id="nagel-designer" className="mx-auto max-w-7xl px-6 py-24 lg:px-8 lg:py-32">
-        <div className="relative overflow-hidden rounded-[2rem] bg-primary px-8 py-16 text-canvas shadow-[0_30px_60px_-30px_rgba(28,25,23,0.5)] sm:px-14 lg:px-20 lg:py-20">
+        <div className="reveal shadow-luxe-lg relative overflow-hidden rounded-[2rem] bg-primary px-8 py-16 text-canvas sm:px-14 lg:px-20 lg:py-20">
+          {/* Fijne binnenkader */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-3 rounded-[1.6rem] border border-taupe/20 sm:inset-4"
+          />
           <div
             aria-hidden="true"
             className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-accent/30 blur-3xl"

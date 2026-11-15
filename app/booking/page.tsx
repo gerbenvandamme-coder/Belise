@@ -207,7 +207,7 @@ function BookingSummary({
   return (
     <aside
       aria-labelledby="booking-summary-heading"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-taupe/40 bg-card/95 px-6 py-4 shadow-[0_-12px_30px_-18px_rgba(28,25,23,0.35)] backdrop-blur lg:sticky lg:top-24 lg:z-auto lg:rounded-3xl lg:border lg:p-6 lg:shadow-[0_20px_40px_-30px_rgba(28,25,23,0.3)]"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-taupe/40 bg-card/95 px-6 py-4 shadow-[0_-12px_30px_-18px_rgba(28,25,23,0.35)] backdrop-blur lg:sticky lg:top-24 lg:z-auto lg:rounded-3xl lg:border lg:p-6 lg:shadow-luxe"
     >
       <h2
         id="booking-summary-heading"

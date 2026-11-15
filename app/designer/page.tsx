@@ -115,7 +115,7 @@ export default function DesignerPage() {
         <section
           ref={previewRef}
           aria-label="Voorbeeld van je nagels"
-          className="rounded-3xl bg-card p-6 shadow-[0_20px_40px_-30px_rgba(28,25,23,0.3)] ring-1 ring-taupe/25 sm:p-10 lg:sticky lg:top-28"
+          className="rounded-3xl bg-card p-6 shadow-luxe ring-1 ring-taupe/25 sm:p-10 lg:sticky lg:top-28"
         >
           <NailCanvas
             shape={config.shape}

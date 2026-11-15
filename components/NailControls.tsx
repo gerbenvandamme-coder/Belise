@@ -150,7 +150,7 @@ export default function NailControls({ value, onChange }: NailControlsProps) {
   const update = (patch: Partial<NailConfig>) => onChange({ ...value, ...patch });
 
   return (
-    <div className="space-y-10 rounded-3xl bg-card p-6 shadow-[0_20px_40px_-30px_rgba(28,25,23,0.3)] ring-1 ring-taupe/25 sm:p-8">
+    <div className="space-y-10 rounded-3xl bg-card p-6 shadow-luxe ring-1 ring-taupe/25 sm:p-8">
       <ControlGroup title="Vorm">
         <div className="grid grid-cols-3 gap-3">
           {NAIL_SHAPES.map((shape) => {

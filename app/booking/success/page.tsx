@@ -26,7 +26,7 @@ export default function BookingSuccessPage() {
         parkeerinstructies.
       </p>
 
-      <div className="mt-12 w-full rounded-3xl bg-card p-8 text-left shadow-[0_20px_40px_-30px_rgba(28,25,23,0.3)] ring-1 ring-taupe/25">
+      <div className="mt-12 w-full rounded-3xl bg-card p-8 text-left shadow-luxe ring-1 ring-taupe/25">
         <p className="flex items-start gap-3 text-sm text-primary">
           <MapPin size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
           <span>

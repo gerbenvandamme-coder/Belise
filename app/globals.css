@@ -7,6 +7,89 @@
   .font-serif {
     font-optical-sizing: auto;
   }
+
+  /* Dunne champagne-lijn die naar de uiteinden toe vervaagt. */
+  .hairline {
+    background: linear-gradient(90deg, transparent, rgba(212, 184, 165, 0.9), transparent);
+  }
+
+  /* Gelaagde, zachte schaduw: dichtbij een fijne contactschaduw, verder weg een brede waas. */
+  .shadow-luxe {
+    box-shadow:
+      0 1px 1px rgba(28, 25, 23, 0.04),
+      0 10px 20px -12px rgba(28, 25, 23, 0.1),
+      0 36px 70px -36px rgba(28, 25, 23, 0.28);
+  }
+  .shadow-luxe-lg {
+    box-shadow:
+      0 1px 2px rgba(28, 25, 23, 0.05),
+      0 18px 34px -16px rgba(28, 25, 23, 0.14),
+      0 48px 90px -40px rgba(28, 25, 23, 0.34);
+  }
+
+  /* Rustige overgang voor hover en lift. */
+  .ease-luxe {
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* ---- Subtiele beweging. Alleen transform/opacity, alles uit bij reduced motion. ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .marble-drift {
+    transform: scale(1.06);
+    will-change: transform;
+    animation: marble-drift 52s ease-in-out infinite alternate;
+  }
+
+  .marble-sheen {
+    background: radial-gradient(
+      ellipse 30% 70% at 50% 40%,
+      rgba(255, 255, 255, 0.45),
+      rgba(255, 255, 255, 0) 70%
+    );
+    opacity: 0.55;
+    will-change: transform;
+    animation: marble-sheen 34s ease-in-out infinite alternate;
+  }
+
+  /* Secties komen rustig in beeld bij het scrollen. Alleen in browsers die scroll-driven
+     animaties kennen; elders staat alles meteen zichtbaar. */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 30%;
+    }
+  }
+}
+
+@keyframes marble-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.06);
+  }
+  to {
+    transform: translate3d(-1.2%, -0.8%, 0) scale(1.09);
+  }
+}
+
+@keyframes marble-sheen {
+  from {
+    transform: translate3d(-22%, -4%, 0) rotate(-8deg);
+  }
+  to {
+    transform: translate3d(22%, 4%, 0) rotate(-8deg);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @layer base {

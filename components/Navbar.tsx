@@ -49,10 +49,10 @@ export default function Navbar() {
   const itemState = isOpen ? ITEM_OPEN : ITEM_CLOSED;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-taupe/30 bg-canvas/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 bg-canvas/80 backdrop-blur-md">
       <div
         aria-hidden="true"
-        className="h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent"
+        className="h-px bg-gradient-to-r from-transparent via-accent/70 to-transparent"
       />
       <nav
         className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8"
@@ -153,6 +153,7 @@ export default function Navbar() {
           </Link>
         </div>
       </div>
+      <div aria-hidden="true" className="hairline h-px" />
     </header>
   );
 }

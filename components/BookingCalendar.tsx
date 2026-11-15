@@ -102,7 +102,7 @@ export default function BookingCalendar({
   };
 
   return (
-    <div className="rounded-3xl bg-card p-6 shadow-[0_20px_40px_-30px_rgba(28,25,23,0.3)] ring-1 ring-taupe/25 sm:p-8">
+    <div className="rounded-3xl bg-card p-6 shadow-luxe ring-1 ring-taupe/25 sm:p-8">
       <div className="flex items-center justify-between gap-4">
         <button
           type="button"
