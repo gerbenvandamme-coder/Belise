@@ -103,7 +103,7 @@ export default function SettingsTab() {
             const rows = services.filter((service) => service.category_id === category.id);
             return (
               <div key={category.id} className="space-y-3">
-                <h3 className="font-serif text-xl font-light text-primary">{category.title}</h3>
+                <h3 className="font-serif text-xl font-normal text-primary">{category.title}</h3>
                 <ul className="space-y-3">
                   {rows.map((service) => (
                     <ServiceEditor
@@ -306,7 +306,7 @@ function NewServiceForm({ nextSortOrder, onCreated, onError }: NewServiceFormPro
 
   return (
     <form onSubmit={handleSubmit} className={`${CARD_CLASS} space-y-4`}>
-      <h3 className="font-serif text-xl font-light text-primary">Nieuwe behandeling</h3>
+      <h3 className="font-serif text-xl font-normal text-primary">Nieuwe behandeling</h3>
 
       <label className="block text-sm text-primary/80">
         Naam

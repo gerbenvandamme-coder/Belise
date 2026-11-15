@@ -182,7 +182,7 @@ export default function NailCarouselClient({ items }: Props) {
           >
             <motion.span
               style={reduceMotion ? undefined : { x: backgroundX }}
-              className="whitespace-nowrap font-serif font-bold uppercase leading-none tracking-tighter text-stone-900/[0.04] text-[18vw]"
+              className="whitespace-nowrap font-serif font-semibold uppercase leading-none tracking-tighter text-stone-900/[0.04] text-[18vw]"
             >
               Belise
             </motion.span>

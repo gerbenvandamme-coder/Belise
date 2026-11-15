@@ -94,7 +94,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-col justify-center px-6 py-16">
       <form onSubmit={handleSignIn} className={`${CARD_CLASS} space-y-4`}>
-        <h1 className="font-serif text-3xl font-light text-primary">Belise Admin</h1>
+        <h1 className="font-serif text-3xl font-normal text-primary">Belise Admin</h1>
 
         <label className="block text-sm text-primary/80">
           E-mailadres

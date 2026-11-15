@@ -1,16 +1,18 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Cormorant_Garamond, Plus_Jakarta_Sans } from 'next/font/google';
+import { Fraunces, Plus_Jakarta_Sans } from 'next/font/google';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MarbleBackground from '@/components/MarbleBackground';
 import './globals.css';
 
-const serif = Cormorant_Garamond({
+// Fraunces: variabel lettertype. De SOFT-as rondt de hoeken af (zie globals.css), opsz past
+// de vorm aan de grootte aan. Geen vaste gewichten: het hele bereik 100-900 is beschikbaar.
+const serif = Fraunces({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
   style: ['normal', 'italic'],
+  axes: ['SOFT', 'opsz'],
   variable: '--font-serif',
   display: 'swap',
 });

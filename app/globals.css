@@ -3,9 +3,10 @@
 @tailwind utilities;
 
 @layer components {
-  .font-display {
+  /* Fraunces met zachte, afgeronde hoeken (SOFT) en zonder de speelse 'wonky' letters. */
+  .font-serif {
     font-optical-sizing: auto;
-    font-variation-settings: 'SOFT' 100;
+    font-variation-settings: 'SOFT' 100, 'WONK' 0;
   }
 }
 

@@ -18,7 +18,7 @@ export default function BookingSuccessPage() {
       <p className="mt-10 text-xs font-medium uppercase tracking-[0.3em] text-primary/55">
         Afspraak bevestigd
       </p>
-      <h1 className="mt-5 font-serif text-4xl font-light leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
+      <h1 className="mt-5 font-serif text-4xl font-normal leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
         Tot binnenkort bij {SALON.name}
       </h1>
       <p className="mt-6 max-w-md text-base leading-relaxed text-primary/70">

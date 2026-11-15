@@ -102,7 +102,7 @@ export default function DesignerPage() {
           <span aria-hidden="true" className="h-px w-8 bg-accent" />
           Nagel Designer
         </p>
-        <h1 className="mt-5 font-serif text-4xl font-light leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
+        <h1 className="mt-5 font-serif text-4xl font-normal leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
           Test je <span className="italic text-accent">ideale</span> set
         </h1>
         <p className="mt-6 text-base leading-relaxed text-primary/70">
@@ -156,7 +156,7 @@ export default function DesignerPage() {
       >
         <div className="p-8">
           <div className="flex items-start justify-between gap-4">
-            <h2 id="booking-title" className="font-serif text-3xl font-light leading-tight">
+            <h2 id="booking-title" className="font-serif text-3xl font-normal leading-tight">
               Neem mee naar afspraak
             </h2>
             <button

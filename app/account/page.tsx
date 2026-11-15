@@ -14,7 +14,7 @@ type SessionState =
   | { status: 'out' }
   | { status: 'in'; email: string };
 
-const SECTION_HEADING = 'font-serif text-4xl font-light leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl';
+const SECTION_HEADING = 'font-serif text-4xl font-normal leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl';
 const FOCUS_RING =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 const INPUT_CLASS = `mt-2 w-full rounded-2xl border border-taupe/50 bg-canvas px-4 py-3 text-sm text-primary placeholder:text-primary/40 ${FOCUS_RING}`;

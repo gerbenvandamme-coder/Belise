@@ -66,7 +66,7 @@ function CallbackFlow() {
   if (failed) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center px-6 py-20 text-center lg:py-28">
-        <h1 className="font-serif text-4xl font-light leading-[1.08] tracking-[-0.015em] text-primary">
+        <h1 className="font-serif text-4xl font-normal leading-[1.08] tracking-[-0.015em] text-primary">
           Inloggen mislukt
         </h1>
         <p role="alert" className="mt-6 text-base leading-relaxed text-primary/70">

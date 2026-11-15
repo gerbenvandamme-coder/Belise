@@ -89,7 +89,7 @@ function TreatmentCard({ category }: { category: TreatmentCategory }) {
       >
         <h3
           id={headingId}
-          className="font-serif text-2xl font-bold leading-tight tracking-[-0.01em] text-stone-900"
+          className="font-serif text-2xl font-semibold leading-tight tracking-[-0.01em] text-stone-900"
         >
           {category.title}
         </h3>
@@ -149,7 +149,7 @@ export default async function HomePage() {
           Beautysalon · Opwijk
         </p>
         <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
-          <h1 className="relative max-w-full overflow-x-clip break-normal font-serif font-bold leading-[0.85] tracking-[-0.03em] text-stone-900">
+          <h1 className="relative max-w-full overflow-x-clip break-normal font-serif font-medium leading-[0.85] tracking-[-0.03em] text-stone-900">
             <span className="block text-[length:clamp(3.5rem,13vw,11rem)]">Belise</span>
             <span className="-mt-2 block text-[length:clamp(2rem,7vw,6rem)] italic leading-none tracking-[0.02em] text-accent sm:-mt-5">
               Beauty

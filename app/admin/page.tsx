@@ -57,7 +57,7 @@ export default function AdminPage() {
       </nav>
 
       <main className="flex-1 px-5 pb-28 pt-8 lg:px-10 lg:pb-12">
-        <h1 className="font-serif text-3xl font-light text-primary">{active.label}</h1>
+        <h1 className="font-serif text-3xl font-normal text-primary">{active.label}</h1>
         <div className="mt-6">{content}</div>
       </main>
     </div>

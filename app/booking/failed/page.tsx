@@ -21,7 +21,7 @@ export default async function BookingFailedPage({ searchParams }: FailedPageProp
         <Clock size={28} aria-hidden="true" />
       </span>
 
-      <h1 className="mt-10 font-serif text-4xl font-light leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
+      <h1 className="mt-10 font-serif text-4xl font-normal leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
         {expired ? 'Je reservering is vervallen' : 'Deze link werkt niet'}
       </h1>
       <p className="mt-6 max-w-md text-base leading-relaxed text-primary/70">

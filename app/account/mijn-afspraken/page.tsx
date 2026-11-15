@@ -154,7 +154,7 @@ function BookingSection({ title, bookings }: { title: string; bookings: BookingR
   if (bookings.length === 0) return null;
   return (
     <section className="mt-10">
-      <h2 className="font-serif text-2xl font-light text-primary">{title}</h2>
+      <h2 className="font-serif text-2xl font-normal text-primary">{title}</h2>
       <ul className="mt-4 space-y-4">
         {bookings.map((booking) => (
           <BookingCard key={booking.id} booking={booking} />
@@ -222,7 +222,7 @@ export default function MyBookingsPage() {
         Mijn account
       </Link>
 
-      <h1 className="mt-8 font-serif text-4xl font-light leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
+      <h1 className="mt-8 font-serif text-4xl font-normal leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
         Mijn afspraken
       </h1>
 

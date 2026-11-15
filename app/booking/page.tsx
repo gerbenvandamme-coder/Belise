@@ -106,7 +106,7 @@ type FormValues = {
 const EMPTY_FORM: FormValues = { clientNotes: '', photoSocialConsent: false };
 const FALLBACK_ERROR = 'Er ging iets mis. Probeer het later opnieuw.';
 
-const SECTION_HEADING = 'font-serif text-2xl font-light text-primary';
+const SECTION_HEADING = 'font-serif text-2xl font-normal text-primary';
 const INPUT_CLASS =
   'mt-2 w-full rounded-2xl border border-taupe/50 bg-canvas px-4 py-3 text-sm text-primary placeholder:text-primary/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 const FOCUS_RING =
@@ -556,7 +556,7 @@ function BookingFlow() {
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-white">
           <Check size={28} aria-hidden="true" />
         </span>
-        <h1 className="mt-8 font-serif text-4xl font-light leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
+        <h1 className="mt-8 font-serif text-4xl font-normal leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
           Afspraak aangevraagd
         </h1>
         <p className="mt-6 max-w-md text-base leading-relaxed text-primary/70">
@@ -588,7 +588,7 @@ function BookingFlow() {
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent-dark">
           Afspraak maken
         </p>
-        <h1 className="mt-4 font-serif text-4xl font-light leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
+        <h1 className="mt-4 font-serif text-4xl font-normal leading-[1.08] tracking-[-0.015em] text-primary sm:text-5xl">
           Boek je behandeling
         </h1>
       </header>
