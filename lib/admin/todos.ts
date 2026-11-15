@@ -187,7 +187,7 @@ export const TODO_GROUPS: readonly TodoGroup[] = [
         title: 'Korte uitleg per behandeling',
         owner: 'eigenares',
         priority: 1,
-        why: 'Nu staan er bijna enkel prijzen. Twee à drie zinnen per groep helpt klanten kiezen en verhoogt de score bij Google.',
+        why: 'Op /behandelingen staat nu een algemene concepttekst per groep en per behandeling (in het infovenster). Die moet nagelezen en in jouw woorden aangepast worden; het staat in lib/treatmentInfo.ts.',
         steps: [
           'Gelnagels: wat is het, hoe lang houdt het, wanneer bijwerken?',
           'BIAB: voor wie is het ideaal, verschil met gel, "op tenen"?',

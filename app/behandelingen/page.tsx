@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Ornament from '@/components/Ornament';
 import PageHeader from '@/components/PageHeader';
-import TreatmentMenu from '@/components/TreatmentMenu';
+import TreatmentCatalog from '@/components/TreatmentCatalog';
 import { fetchTreatmentCategories } from '@/lib/services';
 import { createPublicSupabase } from '@/lib/supabasePublic';
 import { TREATMENT_CATEGORIES, visibleCategories } from '@/lib/treatments';
@@ -43,12 +43,13 @@ export default async function TreatmentsPage() {
           }
         >
           <p>
-            Klap een categorie open en kies je behandeling. De prijzen zijn richtprijzen: de
-            definitieve prijs hangt af van lengte, design en eventuele verwijdering van een oude set.
+            Open een categorie, kies een onderdeel en tik op een behandeling voor meer uitleg. Met de
+            knop ernaast boek je meteen. De prijzen zijn richtprijzen: de definitieve prijs hangt af
+            van lengte, design en eventuele verwijdering van een oude set.
           </p>
         </PageHeader>
 
-        <TreatmentMenu categories={categories} eager />
+        <TreatmentCatalog categories={categories} />
       </section>
 
       <Ornament className="px-6" />
