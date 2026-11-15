@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, type FormEvent } from 'react';
+import { Suspense, useEffect, useMemo, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Check, Clock, X } from 'lucide-react';
@@ -11,6 +11,7 @@ import { clearPendingBooking, loadPendingBooking, savePendingBooking } from '@/l
 import { toDateKey } from '@/lib/schedule';
 import { supabase } from '@/lib/supabase';
 import { uploadBookingReference } from '@/lib/supabaseStorage';
+import { useTreatmentCategories } from '@/lib/useTreatmentCategories';
 import { loadOpenDays, NO_OPEN_DAYS, type OpenDays } from '@/lib/whitelist';
 import {
   LENGTH_LABELS,
@@ -25,6 +26,7 @@ import {
   getTotalDurationMin,
   hasLengthOptions,
   type LengthOption,
+  type TreatmentCategory,
   type TreatmentCategoryId,
   type TreatmentItem,
 } from '@/lib/treatments';
@@ -69,22 +71,27 @@ function getRowDuration(treatment: TreatmentItem, length: LengthOption | null): 
   );
 }
 
-// Maximale lengte van het veld "service" in lib/bookings/validation.ts.
+// Maximale lengte van de samengestelde behandelingsnaam.
 const MAX_SERVICE_LABEL_LENGTH = 100;
 const SERVICE_LABEL_SEPARATOR = ' + ';
 const DEFAULT_CATEGORY_ID: TreatmentCategoryId = 'nails';
 
-const BOOKABLE_TREATMENTS: readonly BookableTreatment[] = TREATMENT_CATEGORIES.flatMap(
-  (category) =>
-    category.treatments.map((treatment) => ({
-      ...treatment,
-      categoryId: category.id,
-    })),
-);
+/** Index van alle boekbare behandelingen op id, voor de vaste of de geladen prijslijst. */
+function buildBookableIndex(
+  categories: readonly TreatmentCategory[],
+): Map<string, BookableTreatment> {
+  return new Map(
+    categories.flatMap((category) =>
+      category.treatments.map((treatment): [string, BookableTreatment] => [
+        treatment.id,
+        { ...treatment, categoryId: category.id },
+      ]),
+    ),
+  );
+}
 
-const BOOKABLE_BY_ID = new Map<string, BookableTreatment>(
-  BOOKABLE_TREATMENTS.map((treatment): [string, BookableTreatment] => [treatment.id, treatment]),
-);
+// Enkel voor de beginkeuze uit de URL. De ids in de vaste lijst en in public.services zijn gelijk.
+const STATIC_BOOKABLE_BY_ID = buildBookableIndex(TREATMENT_CATEGORIES);
 
 type FormValues = {
   clientNotes: string;
@@ -115,7 +122,7 @@ function getInitialSelection(
   categoryParam: string | null,
   itemParam: string | null,
 ): InitialSelection {
-  const item = itemParam ? BOOKABLE_BY_ID.get(itemParam) : undefined;
+  const item = itemParam ? STATIC_BOOKABLE_BY_ID.get(itemParam) : undefined;
   if (item) return { categoryId: item.categoryId, treatmentIds: [item.id] };
   if (isTreatmentCategoryId(categoryParam)) return { categoryId: categoryParam, treatmentIds: [] };
   return { categoryId: DEFAULT_CATEGORY_ID, treatmentIds: [] };
@@ -136,7 +143,7 @@ function readBookingError(error: { message: string; code?: string }): {
     return { message: 'Je sessie is verlopen. Log opnieuw in om te boeken.', slotLost: false };
   }
   // De functie gooit bij ongeldige invoer (22023) een Nederlandse melding.
-  if (error.code === '22023' && error.message) {
+  if ((error.code === '22023' || error.code === 'P0001') && error.message) {
     return { message: error.message, slotLost: false };
   }
   return { message: FALLBACK_ERROR, slotLost: false };
@@ -268,6 +275,8 @@ function BookingSummary({
 function BookingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { categories, loaded: categoriesLoaded } = useTreatmentCategories();
+  const bookableById = useMemo(() => buildBookableIndex(categories), [categories]);
   const [initial] = useState(() =>
     getInitialSelection(searchParams.get('category'), searchParams.get('item')),
   );
@@ -332,16 +341,17 @@ function BookingFlow() {
   // Na de magic link komt de klant terug met ?resume=1. Dan zetten we de bewaarde keuze terug.
   const resumeRequested = searchParams.get('resume') === '1';
   useEffect(() => {
-    if (!resumeRequested) return;
+    // Wacht op de actuele tarieven, zodat een bewaarde keuze niet wegvalt.
+    if (!resumeRequested || !categoriesLoaded) return;
     const pending = loadPendingBooking();
     if (!pending) return;
 
-    const ids = pending.selectedIds.filter((id) => BOOKABLE_BY_ID.has(id));
+    const ids = pending.selectedIds.filter((id) => bookableById.has(id));
     const lengths: Partial<Record<string, LengthOption>> = {};
     for (const [id, length] of Object.entries(pending.lengthById)) {
-      if (BOOKABLE_BY_ID.has(id) && isLengthOption(length)) lengths[id] = length;
+      if (bookableById.has(id) && isLengthOption(length)) lengths[id] = length;
     }
-    const firstTreatment = ids[0] ? BOOKABLE_BY_ID.get(ids[0]) : undefined;
+    const firstTreatment = ids[0] ? bookableById.get(ids[0]) : undefined;
 
     setSelectedIds(ids);
     setLengthById(lengths);
@@ -353,12 +363,12 @@ function BookingFlow() {
       photoSocialConsent: pending.photoSocialConsent,
     });
     setResumed(true);
-  }, [resumeRequested]);
+  }, [resumeRequested, categoriesLoaded, bookableById]);
 
-  const activeCategory = TREATMENT_CATEGORIES.find((category) => category.id === activeCategoryId);
+  const activeCategory = categories.find((category) => category.id === activeCategoryId);
 
   const selectedTreatments: PricedTreatment[] = selectedIds.flatMap((id) => {
-    const treatment = BOOKABLE_BY_ID.get(id);
+    const treatment = bookableById.get(id);
     if (!treatment) return [];
     const lengthRequired = hasLengthOptions(treatment);
     const length = lengthRequired ? (lengthById[id] ?? null) : null;
@@ -580,7 +590,7 @@ function BookingFlow() {
               aria-label="Categorieën"
               className="mt-4 flex gap-2 overflow-x-auto pb-1"
             >
-              {TREATMENT_CATEGORIES.map((category) => {
+              {categories.map((category) => {
                 const active = category.id === activeCategoryId;
                 return (
                   <button

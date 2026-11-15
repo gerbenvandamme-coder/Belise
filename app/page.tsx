@@ -13,6 +13,11 @@ import {
   type TreatmentCategory,
   type TreatmentItem,
 } from '@/lib/treatments';
+import { fetchTreatmentCategories } from '@/lib/services';
+import { createPublicSupabase } from '@/lib/supabasePublic';
+
+// Tarieven worden elke minuut opnieuw opgehaald, zodat wijzigingen in /admin snel zichtbaar zijn.
+export const revalidate = 60;
 
 const buttonBase =
   'inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-medium transition-all duration-200 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:transition-none motion-reduce:active:scale-100';
@@ -122,7 +127,10 @@ function TreatmentCard({ category }: { category: TreatmentCategory }) {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const client = createPublicSupabase();
+  const categories = client ? await fetchTreatmentCategories(client) : TREATMENT_CATEGORIES;
+
   return (
     <main id="top" className="flex-1">
       {/* Hero */}
@@ -198,7 +206,7 @@ export default function HomePage() {
           </div>
 
           <div id="tarieven" className="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {TREATMENT_CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <TreatmentCard key={category.id} category={category} />
             ))}
           </div>
