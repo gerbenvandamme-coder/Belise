@@ -344,7 +344,7 @@ function CategoryCard({
           </span>
         </span>
 
-        <span className="relative -mt-10 flex min-w-0 flex-1 flex-col justify-between gap-5 p-6 sm:p-8 md:-ml-24 md:mt-0">
+        <span className="relative -mt-10 flex min-w-0 flex-1 flex-col justify-between gap-5 p-6 sm:p-8 md:-ml-14 md:mt-0">
           <span
             aria-hidden="true"
             className={`pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-accent/10 blur-3xl transition-opacity duration-700 ${

@@ -43,9 +43,10 @@ export default async function TreatmentsPage() {
           }
         >
           <p>
-            Open een categorie, kies een onderdeel en tik op een behandeling voor meer uitleg. Met de
-            knop ernaast boek je meteen. De prijzen zijn richtprijzen: de definitieve prijs hangt af
-            van lengte, design en eventuele verwijdering van een oude set.
+            Open een categorie en tik op een behandeling voor meer uitleg. Met &quot;Toevoegen&quot;
+            stel je je afspraak samen, ook uit verschillende categorieën; daarna kies je de datum. De
+            prijzen zijn richtprijzen: de definitieve prijs hangt af van lengte, design en eventuele
+            verwijdering van een oude set.
           </p>
         </PageHeader>
 
