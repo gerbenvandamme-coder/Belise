@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Clock, Instagram, MapPin } from 'lucide-react';
 import { SALON } from '@/lib/salon';
 
@@ -16,8 +17,8 @@ export default function Footer() {
             {SALON.name}
           </p>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary/70">
-            Beautysalon voor make-up, haar, nagels en behandelingen voor handen en voeten, met
-            aandacht voor elk detail.
+            Beautysalon in Opwijk voor nagels, ontharing en haarverzorging, met aandacht voor elk
+            detail.
           </p>
         </div>
 
@@ -60,9 +61,17 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-taupe/30">
-        <p className="mx-auto max-w-7xl px-6 py-6 text-center text-xs text-primary/60 lg:px-8">
-          © {year} {SALON.name}. Alle rechten voorbehouden.
-        </p>
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-6 text-xs text-primary/60 sm:flex-row lg:px-8">
+          <p>© {year} {SALON.name}. Alle rechten voorbehouden.</p>
+          <nav aria-label="Juridisch" className="flex gap-5">
+            <Link href="/algemene-voorwaarden" className="hover:text-accent-dark hover:underline">
+              Algemene voorwaarden
+            </Link>
+            <Link href="/privacy" className="hover:text-accent-dark hover:underline">
+              Privacy
+            </Link>
+          </nav>
+        </div>
       </div>
     </footer>
   );

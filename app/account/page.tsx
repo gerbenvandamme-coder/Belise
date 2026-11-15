@@ -338,7 +338,27 @@ function AccountFlow() {
                   onChange={(event) => setTermsAccepted(event.target.checked)}
                   className={CHECKBOX_CLASS}
                 />
-                <span>Ik ga akkoord met de algemene voorwaarden van Belise. (verplicht)</span>
+                <span>
+                  Ik ga akkoord met de{' '}
+                  <a
+                    href="/algemene-voorwaarden"
+                    target="_blank"
+                    rel="noopener"
+                    className="font-medium text-accent-dark underline underline-offset-4"
+                  >
+                    algemene voorwaarden
+                  </a>{' '}
+                  van Belise en heb de{' '}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener"
+                    className="font-medium text-accent-dark underline underline-offset-4"
+                  >
+                    privacyverklaring
+                  </a>{' '}
+                  gelezen. (verplicht)
+                </span>
               </label>
 
               <label className="flex items-start gap-3 text-sm leading-relaxed text-primary/80">

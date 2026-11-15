@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Clock } from 'lucide-react';
+import DeleteAccountSection from '@/components/DeleteAccountSection';
 import { supabase } from '@/lib/supabase';
 import { getSignedReferenceUrl } from '@/lib/supabaseStorage';
 import { toDateKey } from '@/lib/schedule';
@@ -254,6 +255,7 @@ export default function MyBookingsPage() {
         <>
           <BookingSection title="Aankomend" bookings={upcoming} />
           <BookingSection title="Eerdere afspraken" bookings={past} />
+          <DeleteAccountSection bookings={bookings} />
         </>
       )}
     </main>

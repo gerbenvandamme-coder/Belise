@@ -187,3 +187,13 @@ revoke execute on function public.create_booking(uuid, date, time, time, jsonb, 
   from public, anon;
 grant execute on function public.create_booking(uuid, date, time, time, jsonb, numeric, text, text, text, boolean, jsonb)
   to authenticated;
+
+-- 3. Recht op wissing (art. 17 AVG): een klant mag de eigen foto's verwijderen.
+--    De app doet dat net vóór delete_own_account(), zodat er geen foto's achterblijven.
+drop policy if exists "booking-references: klant verwijdert eigen map" on storage.objects;
+create policy "booking-references: klant verwijdert eigen map"
+  on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'booking-references'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
