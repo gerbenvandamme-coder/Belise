@@ -15,6 +15,7 @@ import { toDateKey } from '@/lib/schedule';
 import { supabase } from '@/lib/supabase';
 import { uploadBookingReference } from '@/lib/supabaseStorage';
 import { useTreatmentCategories } from '@/lib/useTreatmentCategories';
+import { conflictReason, sanitizeSelection, toggleWithRules } from '@/lib/treatmentRules';
 import { loadOpenDays, NO_OPEN_DAYS, type OpenDays } from '@/lib/whitelist';
 import {
   LENGTH_LABELS,
@@ -296,7 +297,8 @@ function BookingFlow() {
   const [activeCategoryId, setActiveCategoryId] = useState<TreatmentCategoryId>(
     initial.categoryId,
   );
-  const [selectedIds, setSelectedIds] = useState<string[]>(initial.treatmentIds);
+  const [selectedIds, setSelectedIds] = useState<string[]>(() => sanitizeSelection(initial.treatmentIds));
+  const [replacedNotice, setReplacedNotice] = useState<string | null>(null);
   const [lengthById, setLengthById] = useState<Partial<Record<string, LengthOption>>>({});
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState<string | null>(null);
@@ -376,7 +378,7 @@ function BookingFlow() {
     }
     const firstTreatment = ids[0] ? bookableById.get(ids[0]) : undefined;
 
-    setSelectedIds(ids);
+    setSelectedIds(sanitizeSelection(ids));
     setLengthById(lengths);
     if (firstTreatment) setActiveCategoryId(firstTreatment.categoryId);
     setDate(parseDateKey(pending.dateKey));
@@ -427,10 +429,18 @@ function BookingFlow() {
     !submitting;
 
   // Elke wijziging in de selectie verandert de duur, dus het gekozen tijdslot vervalt.
+  // Overlappende pakketten (bv. twee nagelsets) kunnen niet samen: de nieuwe keuze vervangt de oude.
   const toggleTreatment = (id: string) => {
-    setSelectedIds((previous) =>
-      previous.includes(id) ? previous.filter((item) => item !== id) : [...previous, id],
-    );
+    const result = toggleWithRules(selectedIds, id);
+    setSelectedIds(result.next);
+    if (result.replaced.length > 0) {
+      const names = result.replaced.map((other) => bookableById.get(other)?.title ?? other).join(' en ');
+      setReplacedNotice(
+        `${names} vervangen door ${bookableById.get(id)?.title ?? id}. ${conflictReason(id, result.replaced[0]) ?? ''}`.trim(),
+      );
+    } else {
+      setReplacedNotice(null);
+    }
     setTime(null);
   };
 
@@ -637,6 +647,15 @@ function BookingFlow() {
                 );
               })}
             </div>
+
+            {replacedNotice && (
+              <p
+                role="status"
+                className="mt-4 rounded-2xl border border-accent/30 bg-accent-soft px-4 py-3 text-sm text-accent-dark"
+              >
+                {replacedNotice}
+              </p>
+            )}
 
             <div
               role="tabpanel"

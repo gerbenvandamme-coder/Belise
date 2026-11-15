@@ -14,8 +14,9 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Check, ChevronDown, ChevronUp, Clock, Info, Plus, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, ChevronUp, Clock, Info, Plus, Repeat2, X } from 'lucide-react';
 import { ITEM_NOTE, infoFor } from '@/lib/treatmentInfo';
+import { conflictReason, conflictsWith, sanitizeSelection, toggleWithRules } from '@/lib/treatmentRules';
 import {
   LENGTH_LABELS,
   LENGTH_OPTIONS,
@@ -67,7 +68,11 @@ const STORAGE_KEY = 'belise-selectie';
 
 type Selection = {
   ids: readonly string[];
+  /** Korte melding wanneer een behandeling een andere verving. */
+  notice: string | null;
   has: (id: string) => boolean;
+  /** Gekozen behandelingen die met `id` botsen. */
+  conflicts: (id: string) => string[];
   toggle: (id: string) => void;
   remove: (id: string) => void;
   clear: () => void;
@@ -82,22 +87,24 @@ function useSelection(): Selection {
 }
 
 /** Selectie van behandelingen, bewaard voor dit tabblad (sessionStorage) zodat terugkeren niets wist. */
-function useSelectionState(validIds: ReadonlySet<string>): Selection {
+function useSelectionState(byId: ReadonlyMap<string, TreatmentItem>): Selection {
   const [ids, setIds] = useState<string[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
   const loaded = useRef(false);
+  const noticeTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     try {
       const raw = window.sessionStorage.getItem(STORAGE_KEY);
       const parsed: unknown = raw ? JSON.parse(raw) : [];
       if (Array.isArray(parsed)) {
-        setIds(parsed.filter((id): id is string => typeof id === 'string' && validIds.has(id)));
+        setIds(sanitizeSelection(parsed.filter((id): id is string => typeof id === 'string' && byId.has(id))));
       }
     } catch {
       // Geen opslag beschikbaar: selectie blijft enkel in het geheugen.
     }
     loaded.current = true;
-  }, [validIds]);
+  }, [byId]);
 
   useEffect(() => {
     if (!loaded.current) return;
@@ -108,16 +115,37 @@ function useSelectionState(validIds: ReadonlySet<string>): Selection {
     }
   }, [ids]);
 
+  useEffect(() => () => window.clearTimeout(noticeTimer.current), []);
+
+  const showNotice = useCallback((text: string) => {
+    setNotice(text);
+    window.clearTimeout(noticeTimer.current);
+    noticeTimer.current = window.setTimeout(() => setNotice(null), 4500);
+  }, []);
+
+  const toggle = useCallback(
+    (id: string) => {
+      const result = toggleWithRules(ids, id);
+      setIds(result.next);
+      if (result.replaced.length > 0) {
+        const names = result.replaced.map((other) => byId.get(other)?.title ?? other).join(' en ');
+        showNotice(`${names} vervangen door ${byId.get(id)?.title ?? id}. ${conflictReason(id, result.replaced[0]) ?? ''}`.trim());
+      }
+    },
+    [ids, byId, showNotice],
+  );
+
   return useMemo(
     () => ({
       ids,
+      notice,
       has: (id: string) => ids.includes(id),
-      toggle: (id: string) =>
-        setIds((current) => (current.includes(id) ? current.filter((other) => other !== id) : [...current, id])),
+      conflicts: (id: string) => conflictsWith(id, ids),
+      toggle,
       remove: (id: string) => setIds((current) => current.filter((other) => other !== id)),
       clear: () => setIds([]),
     }),
-    [ids],
+    [ids, notice, toggle],
   );
 }
 
@@ -125,25 +153,44 @@ function useSelectionState(validIds: ReadonlySet<string>): Selection {
 function PickButton({ item, size = 'sm' }: { item: TreatmentItem; size?: 'sm' | 'lg' }) {
   const selection = useSelection();
   const picked = selection.has(item.id);
+  const swap = !picked && selection.conflicts(item.id).length > 0;
   const large = size === 'lg';
+  const Icon = picked ? Check : swap ? Repeat2 : Plus;
+  const label = picked
+    ? large
+      ? 'Gekozen · tik om te verwijderen'
+      : 'Gekozen'
+    : swap
+      ? large
+        ? 'Wisselen naar deze behandeling'
+        : 'Wisselen'
+      : large
+        ? 'Toevoegen aan je afspraak'
+        : 'Toevoegen';
   return (
     <button
       type="button"
       aria-pressed={picked}
-      aria-label={picked ? `${item.title} verwijderen uit je afspraak` : `${item.title} toevoegen aan je afspraak`}
+      aria-label={
+        picked
+          ? `${item.title} verwijderen uit je afspraak`
+          : swap
+            ? `Wisselen naar ${item.title}`
+            : `${item.title} toevoegen aan je afspraak`
+      }
       onClick={() => selection.toggle(item.id)}
       className={`ease-luxe inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full font-medium transition-all duration-300 active:scale-95 motion-reduce:transition-none ${FOCUS} ${
         large ? 'h-12 flex-1 px-6 text-[14px]' : 'h-9 px-3.5 text-[12px]'
       } ${
         picked
           ? 'bg-accent-soft text-accent-dark ring-1 ring-accent/40'
-          : 'bg-accent text-white shadow-sm hover:bg-accent-dark'
+          : swap
+            ? 'bg-card text-accent-dark ring-1 ring-accent/50 hover:bg-accent-soft'
+            : 'bg-accent text-white shadow-sm hover:bg-accent-dark'
       }`}
     >
-      {picked ? <Check size={large ? 16 : 14} aria-hidden="true" /> : <Plus size={large ? 16 : 14} aria-hidden="true" />}
-      <span className={large ? '' : 'hidden sm:inline'}>
-        {picked ? (large ? 'Gekozen · tik om te verwijderen' : 'Gekozen') : large ? 'Toevoegen aan je afspraak' : 'Toevoegen'}
-      </span>
+      <Icon size={large ? 16 : 14} aria-hidden="true" />
+      <span className={large ? '' : 'hidden sm:inline'}>{label}</span>
     </button>
   );
 }
@@ -496,6 +543,22 @@ function SelectionBar({ byId }: { byId: ReadonlyMap<string, TreatmentItem> }) {
         >
           <div className="w-full max-w-xl overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[#7A4652] via-[#8E5763] to-[#A46F79] text-canvas shadow-luxe-lg ring-1 ring-white/15">
             <AnimatePresence initial={false}>
+              {selection.notice && (
+                <motion.p
+                  key={selection.notice}
+                  role="status"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: EASE }}
+                  className="flex items-start gap-2 border-b border-white/15 bg-black/10 px-5 py-3 text-[13px] leading-snug text-canvas/95"
+                >
+                  <Repeat2 size={15} aria-hidden="true" className="mt-0.5 shrink-0" />
+                  {selection.notice}
+                </motion.p>
+              )}
+            </AnimatePresence>
+            <AnimatePresence initial={false}>
               {expanded && (
                 <motion.ul
                   key="list"
@@ -730,6 +793,8 @@ function DialogBody({
           </div>
         )}
 
+        <ConflictHint item={item} />
+
         <p className="mt-5 text-[11px] leading-relaxed text-primary/45">
           Richtprijs. De definitieve prijs hangt af van lengte, design en een eventuele oude set.
         </p>
@@ -749,6 +814,21 @@ function DialogBody({
   );
 }
 
+function ConflictHint({ item }: { item: TreatmentItem }) {
+  const selection = useSelection();
+  const others = selection.has(item.id) ? [] : selection.conflicts(item.id);
+  if (others.length === 0) return null;
+  return (
+    <p className="mt-5 flex items-start gap-2 rounded-2xl bg-accent-soft/60 px-4 py-3 text-[13px] leading-relaxed text-accent-dark">
+      <Repeat2 size={15} aria-hidden="true" className="mt-0.5 shrink-0" />
+      <span>
+        Kan niet samen met wat je al koos. Kies je deze, dan vervangt ze die behandeling.{' '}
+        {conflictReason(item.id, others[0])}
+      </span>
+    </p>
+  );
+}
+
 /* --------------------------------------------------------------- lijst ---- */
 
 export default function TreatmentCatalog({ categories }: { categories: readonly TreatmentCategory[] }) {
@@ -757,8 +837,7 @@ export default function TreatmentCatalog({ categories }: { categories: readonly 
     () => new Map(categories.flatMap((category) => category.treatments.map((item) => [item.id, item] as const))),
     [categories],
   );
-  const validIds = useMemo(() => new Set(byId.keys()), [byId]);
-  const selection = useSelectionState(validIds);
+  const selection = useSelectionState(byId);
   const [selected, setSelected] = useState<Selected | null>(null);
   const close = useCallback(() => setSelected(null), []);
 
