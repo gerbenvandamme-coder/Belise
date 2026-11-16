@@ -55,7 +55,7 @@ export default async function HomePage() {
             <span className="sr-only"> – beautysalon in Opwijk voor nagels, ontharing en haarverzorging</span>
           </h1>
 
-          <figure className="relative mx-auto w-full max-w-[19rem] sm:max-w-sm lg:ml-auto lg:mr-6 lg:max-w-[22rem]">
+          <figure className="relative mx-auto mt-8 w-full max-w-[19rem] sm:max-w-sm lg:ml-auto lg:mr-6 lg:mt-12 lg:max-w-[22rem]">
             <div className="relative">
             {/* Verschoven kaderlijn achter de foto */}
             <div
@@ -63,18 +63,40 @@ export default async function HomePage() {
               className="pointer-events-none absolute inset-0 translate-x-3 translate-y-3 rounded-[2rem] border border-taupe/70 sm:translate-x-5 sm:translate-y-5"
             />
             <div className="shadow-luxe-lg relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] ring-1 ring-taupe/30">
-              <Image
-                src="/assets/Front/Clean%20front%20picture.jpg"
-                alt="Zaakvoerder van Belise"
-                fill
-                priority
-                sizes="(min-width: 1024px) 40vw, 90vw"
-                className="object-cover"
-              />
+              {/* De foto is iets uitvergroot, verankerd onderaan, zodat de uitsnede hieronder exact meeschaalt. */}
+              <div
+                className="absolute inset-x-0 top-[-21.7%] aspect-[1536/2752] origin-bottom scale-[1.12]"
+              >
+                <Image
+                  src="/assets/Front/Clean%20front%20picture.jpg"
+                  alt="Zaakvoerder van Belise"
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 40vw, 90vw"
+                  className="object-cover"
+                />
+              </div>
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/40"
               />
+            </div>
+            {/* Dezelfde foto, uitgeknipt: hoofd en schouders steken boven het kader uit. Onderaan blijft het afgesneden. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 [clip-path:inset(-30%_-12%_0_-12%_round_0_0_2rem_2rem)]"
+            >
+              <div className="absolute inset-x-0 top-[-21.7%] aspect-[1536/2752] origin-bottom scale-[1.12]">
+                <Image
+                  src="/assets/Front/front-cutout.webp"
+                  alt=""
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 40vw, 90vw"
+                  className="select-none object-cover"
+                  draggable={false}
+                />
+              </div>
             </div>
             </div>
             <figcaption className="mt-8 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-primary/55">
