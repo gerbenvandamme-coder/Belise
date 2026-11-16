@@ -65,7 +65,7 @@ export default async function HomePage() {
             <div className="shadow-luxe-lg relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] ring-1 ring-taupe/30">
               {/* De foto is iets uitvergroot, verankerd onderaan, zodat de uitsnede hieronder exact meeschaalt. */}
               <div
-                className="absolute inset-x-0 top-[-21.7%] aspect-[1536/2752] origin-bottom scale-[1.12]"
+                className="absolute inset-x-0 top-0 aspect-[1536/2752] origin-bottom scale-[1.3]"
               >
                 <Image
                   src="/assets/Front/Clean%20front%20picture.jpg"
@@ -86,7 +86,7 @@ export default async function HomePage() {
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 [clip-path:inset(-30%_-12%_0_-12%_round_0_0_2rem_2rem)]"
             >
-              <div className="absolute inset-x-0 top-[-21.7%] aspect-[1536/2752] origin-bottom scale-[1.12]">
+              <div className="absolute inset-x-0 top-0 aspect-[1536/2752] origin-bottom scale-[1.3]">
                 <Image
                   src="/assets/Front/front-cutout.webp"
                   alt=""
