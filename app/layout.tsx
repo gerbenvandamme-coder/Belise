@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Gloock, Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
@@ -31,6 +31,14 @@ const sans = Plus_Jakarta_Sans({
   variable: '--font-sans',
   display: 'swap',
 });
+
+// Geen zoom op mobiel: de pagina is er al leesbaar en een formulier mag niet inzoomen bij het typen.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

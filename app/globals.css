@@ -99,13 +99,27 @@
 
 @layer base {
   html {
+    /* Geen pinch- of dubbeltikzoom (iOS Safari respecteert viewport-meta niet altijd). */
+    touch-action: pan-x pan-y;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     scroll-behavior: smooth;
     scroll-padding-top: 5rem;
   }
 
+  /* iOS zoomt in op een veld met een lettergrootte onder 16px zodra je erin tikt. */
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
     }
+  }
+}
+/* iOS zoomt in op een veld met een lettergrootte onder 16px zodra je erin tikt.
+   Buiten @layer en met !important, zodat Tailwind-klassen als text-sm dit niet overschrijven. */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }
