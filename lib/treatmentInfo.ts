@@ -21,7 +21,6 @@ export const GROUP_INFO: Record<string, InfoBlock> = {
       'Kom je later dan de termijn in de naam, kies dan de bijwerking met "+".',
       'Gelnagels houden gemiddeld 4 weken.',
       'Breekt er binnen een week een nagel af? Dan herstellen we die gratis.',
-      'Twijfel je over vorm of kleur? Probeer het eerst in de nageldesigner.',
       'Laat de toestand van je nagels of huid een behandeling niet toe, dan kan de schoonheidsspecialiste beslissen ze niet (opnieuw) uit te voeren.',
     ],
   },
