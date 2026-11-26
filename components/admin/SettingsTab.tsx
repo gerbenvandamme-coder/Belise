@@ -30,17 +30,6 @@ function readLengthPricing(value: ServiceRow['length_pricing']): LengthPricing |
   return value as unknown as LengthPricing;
 }
 
-function buildLengthPricing(
-  current: LengthPricing,
-  prices: Record<string, number>,
-): LengthPricing {
-  const next = {} as LengthPricing;
-  for (const length of LENGTH_OPTIONS) {
-    next[length] = { ...current[length], price_euro: prices[length] };
-  }
-  return next;
-}
-
 function slugify(title: string): string {
   return title
     .toLowerCase()
@@ -86,7 +75,7 @@ export default function SettingsTab() {
     <div className="space-y-12">
       <section aria-labelledby="services-heading" className="space-y-8">
         <h2 id="services-heading" className={SECTION_LABEL}>
-          Diensten & prijzen
+          Behandelingen, prijzen & duur
         </h2>
 
         {error && (
@@ -134,40 +123,108 @@ type ServiceEditorProps = {
   onError: (message: string) => void;
 };
 
+type Fields = { price: string; active: string; processing: string };
+
+function toFields(price: number | null | undefined, active: number | null | undefined, processing: number | null | undefined): Fields {
+  return { price: String(price ?? ''), active: String(active ?? ''), processing: String(processing ?? 0) };
+}
+
+/** Geheel getal, of null als het ongeldig is. min = kleinste toegelaten waarde. */
+function parseWhole(raw: string, min: number): number | null {
+  const value = Number(raw);
+  return raw.trim() && Number.isInteger(value) && value >= min ? value : null;
+}
+
+/**
+ * Eén behandeling: naam, groep, prijs en duur aanpassen, zichtbaarheid en verwijderen.
+ * Duurtijden zijn richttijden; de agenda plant ermee.
+ */
 function ServiceEditor({ service, onChanged, onError }: ServiceEditorProps) {
   const pricing = readLengthPricing(service.length_pricing);
-  const [prices, setPrices] = useState<Record<string, string>>(() =>
+  const initialFields = (): Record<string, Fields> =>
     pricing
       ? Object.fromEntries(
-          LENGTH_OPTIONS.map((length) => [length, String(pricing[length].price_euro)]),
+          LENGTH_OPTIONS.map((length) => [
+            length,
+            toFields(
+              pricing[length].price_euro,
+              pricing[length].active_duration_min,
+              pricing[length].processing_duration_min,
+            ),
+          ]),
         )
-      : { [FIXED_KEY]: String(service.price_euro ?? '') },
-  );
-  const [saving, setSaving] = useState(false);
+      : {
+          [FIXED_KEY]: toFields(
+            service.price_euro,
+            service.active_duration_min,
+            service.processing_duration_min,
+          ),
+        };
 
-  async function savePrices() {
-    const parsed: Record<string, number> = {};
-    for (const [key, raw] of Object.entries(prices)) {
-      const value = Number(raw);
-      if (!raw.trim() || !Number.isInteger(value) || value < 0) {
-        onError(`Vul bij ${service.title} een geheel bedrag van 0 euro of meer in.`);
-        return;
-      }
-      parsed[key] = value;
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState(service.title);
+  const [group, setGroup] = useState(service.group_name ?? '');
+  const [fields, setFields] = useState<Record<string, Fields>>(initialFields);
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const summary = pricing
+    ? LENGTH_OPTIONS.map((length) => `€${pricing[length].price_euro}`).join(' / ')
+    : `€${service.price_euro ?? '–'}`;
+  const durationSummary = pricing
+    ? LENGTH_OPTIONS.map((length) => pricing[length].active_duration_min).join(' / ') + ' min'
+    : `${service.active_duration_min ?? '–'} min`;
+
+  function setField(key: string, name: keyof Fields, value: string) {
+    setFields((previous) => ({ ...previous, [key]: { ...previous[key], [name]: value } }));
+  }
+
+  async function save() {
+    const cleanTitle = title.trim();
+    if (!cleanTitle) {
+      onError('Geef de behandeling een naam.');
+      return;
     }
 
-    const update = pricing
-      ? { length_pricing: buildLengthPricing(pricing, parsed) }
-      : { price_euro: parsed[FIXED_KEY] };
+    const parsed: Record<string, { price: number; active: number; processing: number }> = {};
+    for (const [key, value] of Object.entries(fields)) {
+      const price = parseWhole(value.price, 0);
+      const active = parseWhole(value.active, 1);
+      const processing = parseWhole(value.processing, 0);
+      if (price === null || active === null || processing === null) {
+        onError(`Controleer ${cleanTitle}: prijs en inwerktijd zijn 0 of meer, de duur minstens 1 minuut.`);
+        return;
+      }
+      parsed[key] = { price, active, processing };
+    }
+
+    const update: Partial<ServiceRow> = { title: cleanTitle, group_name: group.trim() || null };
+    if (pricing) {
+      update.length_pricing = Object.fromEntries(
+        LENGTH_OPTIONS.map((length) => [
+          length,
+          {
+            price_euro: parsed[length].price,
+            active_duration_min: parsed[length].active,
+            processing_duration_min: parsed[length].processing,
+          },
+        ]),
+      );
+    } else {
+      update.price_euro = parsed[FIXED_KEY].price;
+      update.active_duration_min = parsed[FIXED_KEY].active;
+      update.processing_duration_min = parsed[FIXED_KEY].processing;
+    }
 
     setSaving(true);
     const { error } = await supabase.from('services').update(update).eq('id', service.id);
     setSaving(false);
 
     if (error) {
-      onError('Prijs opslaan mislukt. Probeer opnieuw.');
+      onError('Opslaan mislukt. Probeer opnieuw.');
       return;
     }
+    setOpen(false);
     onChanged();
   }
 
@@ -186,15 +243,42 @@ function ServiceEditor({ service, onChanged, onError }: ServiceEditorProps) {
     onChanged();
   }
 
+  async function remove() {
+    setSaving(true);
+    const { error } = await supabase.from('services').delete().eq('id', service.id);
+    setSaving(false);
+    setConfirmDelete(false);
+
+    if (error) {
+      onError('Verwijderen mislukt. Probeer opnieuw.');
+      return;
+    }
+    onChanged();
+  }
+
+  function cancel() {
+    setTitle(service.title);
+    setGroup(service.group_name ?? '');
+    setFields(initialFields());
+    setOpen(false);
+  }
+
   return (
     <li className={`${CARD_CLASS} space-y-4`}>
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+          className={`min-h-12 flex-1 rounded-xl text-left ${FOCUS_RING}`}
+        >
           <p className="font-medium text-primary">{service.title}</p>
-          {service.group_name && (
-            <p className="text-xs text-primary/60">{service.group_name}</p>
-          )}
-        </div>
+          <p className="text-xs text-primary/60">
+            {service.group_name ? `${service.group_name} · ` : ''}
+            {summary} · {durationSummary}
+          </p>
+          <p className="mt-1 text-xs font-medium text-accent-dark">{open ? 'Sluiten' : 'Aanpassen'}</p>
+        </button>
         <button
           type="button"
           aria-pressed={service.is_active}
@@ -208,33 +292,132 @@ function ServiceEditor({ service, onChanged, onError }: ServiceEditorProps) {
         </button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        {Object.keys(prices).map((key) => (
-          <label key={key} className="text-sm text-primary/80">
-            {key === FIXED_KEY ? 'Prijs (€)' : `${LENGTH_LABELS[key as LengthOption]} (€)`}
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={1}
-              value={prices[key]}
-              onChange={(event) =>
-                setPrices((previous) => ({ ...previous, [key]: event.target.value }))
-              }
-              className={`mt-2 ${INPUT_CLASS}`}
-            />
-          </label>
-        ))}
-      </div>
+      {open && (
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm text-primary/80">
+              Naam
+              <input
+                type="text"
+                maxLength={80}
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                className={`mt-2 ${INPUT_CLASS}`}
+              />
+            </label>
+            <label className="text-sm text-primary/80">
+              Groep (optioneel)
+              <input
+                type="text"
+                maxLength={60}
+                value={group}
+                onChange={(event) => setGroup(event.target.value)}
+                className={`mt-2 ${INPUT_CLASS}`}
+              />
+            </label>
+          </div>
 
-      <button
-        type="button"
-        disabled={saving}
-        onClick={savePrices}
-        className={`${BUTTON_PRIMARY} w-full`}
-      >
-        Prijs opslaan
-      </button>
+          {Object.keys(fields).map((key) => (
+            <fieldset key={key} className="space-y-2">
+              {key !== FIXED_KEY && (
+                <legend className="text-xs font-semibold uppercase tracking-[0.12em] text-primary/60">
+                  {LENGTH_LABELS[key as LengthOption]}
+                </legend>
+              )}
+              <div className="grid grid-cols-3 gap-3">
+                <label className="text-sm text-primary/80">
+                  Prijs (€)
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={1}
+                    value={fields[key].price}
+                    onChange={(event) => setField(key, 'price', event.target.value)}
+                    className={`mt-2 ${INPUT_CLASS}`}
+                  />
+                </label>
+                <label className="text-sm text-primary/80">
+                  Duur (min)
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    step={5}
+                    value={fields[key].active}
+                    onChange={(event) => setField(key, 'active', event.target.value)}
+                    className={`mt-2 ${INPUT_CLASS}`}
+                  />
+                </label>
+                <label className="text-sm text-primary/80">
+                  Inwerktijd (min)
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={5}
+                    value={fields[key].processing}
+                    onChange={(event) => setField(key, 'processing', event.target.value)}
+                    className={`mt-2 ${INPUT_CLASS}`}
+                  />
+                </label>
+              </div>
+            </fieldset>
+          ))}
+          <p className="text-xs text-primary/55">
+            De duur is een richttijd: de agenda plant er afspraken mee. Inwerktijd is wachttijd
+            zonder actief werk (bv. bij kleuring).
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button type="button" disabled={saving} onClick={save} className={`${BUTTON_PRIMARY} w-full`}>
+              {saving ? 'Opslaan…' : 'Opslaan'}
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={cancel}
+              className={`min-h-12 w-full rounded-full border border-primary/20 text-sm font-medium text-primary ${FOCUS_RING}`}
+            >
+              Annuleren
+            </button>
+          </div>
+
+          {confirmDelete ? (
+            <div className="rounded-2xl bg-red-50 p-4 text-sm text-red-800">
+              <p>
+                {service.title} definitief verwijderen? Bestaande afspraken blijven staan, maar
+                klanten kunnen deze behandeling niet meer boeken. Tijdelijk verbergen kan ook.
+              </p>
+              <div className="mt-3 flex gap-3">
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={remove}
+                  className={`min-h-12 rounded-full bg-red-700 px-5 font-medium text-white ${FOCUS_RING}`}
+                >
+                  Verwijderen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className={`min-h-12 rounded-full px-5 font-medium text-red-800 ${FOCUS_RING}`}
+                >
+                  Behouden
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className={`min-h-12 text-sm font-medium text-red-700 underline-offset-4 hover:underline ${FOCUS_RING}`}
+            >
+              Behandeling verwijderen
+            </button>
+          )}
+        </div>
+      )}
     </li>
   );
 }
@@ -250,6 +433,7 @@ function NewServiceForm({ nextSortOrder, onCreated, onError }: NewServiceFormPro
   const [categoryId, setCategoryId] = useState<TreatmentCategoryId>('nails');
   const [price, setPrice] = useState('');
   const [duration, setDuration] = useState('');
+  const [group, setGroup] = useState('');
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -282,6 +466,7 @@ function NewServiceForm({ nextSortOrder, onCreated, onError }: NewServiceFormPro
       id,
       category_id: categoryId,
       title: cleanTitle,
+      group_name: group.trim() || null,
       price_euro: priceValue,
       active_duration_min: durationValue,
       processing_duration_min: 0,
@@ -301,6 +486,7 @@ function NewServiceForm({ nextSortOrder, onCreated, onError }: NewServiceFormPro
     setTitle('');
     setPrice('');
     setDuration('');
+    setGroup('');
     onCreated();
   }
 
@@ -333,6 +519,17 @@ function NewServiceForm({ nextSortOrder, onCreated, onError }: NewServiceFormPro
             </option>
           ))}
         </select>
+      </label>
+
+      <label className="block text-sm text-primary/80">
+        Groep (optioneel, bv. Gelnagels)
+        <input
+          type="text"
+          maxLength={60}
+          value={group}
+          onChange={(event) => setGroup(event.target.value)}
+          className={`mt-2 ${INPUT_CLASS}`}
+        />
       </label>
 
       <div className="grid gap-3 sm:grid-cols-2">

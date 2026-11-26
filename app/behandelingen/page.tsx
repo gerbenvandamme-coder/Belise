@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import JsonLd from '@/components/JsonLd';
 import { pageMetadata } from '@/lib/seo';
-import { offerCatalogSchema, pageSchema } from '@/lib/structuredData';
+import { faqSchema, offerCatalogSchema, pageSchema } from '@/lib/structuredData';
+import FaqSection from '@/components/FaqSection';
+import { FAQ } from '@/lib/faq';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Ornament from '@/components/Ornament';
@@ -13,7 +15,7 @@ import { TREATMENT_CATEGORIES, visibleCategories } from '@/lib/treatments';
 
 const TITLE = 'Behandelingen & tarieven | Belise Beauty Opwijk';
 const DESCRIPTION =
-  'Prijslijst van Belise in Opwijk: gelnagels, BIAB, ontharing met wax en haarverzorging (snit, kleuring, brushing), met prijs en duur per behandeling.';
+  'Prijslijst van Belise in Opwijk: gelnagels, manicure, ontharing met wax en haarverzorging (snit, kleuring, brushing), met prijs en duur per behandeling.';
 
 const PATH = '/behandelingen';
 const TYPE = 'WebPage';
@@ -33,6 +35,7 @@ export default async function TreatmentsPage() {
     <main className="flex-1">
       <JsonLd data={pageSchema({ path: PATH, name: TITLE, description: DESCRIPTION, type: TYPE })} />
       <JsonLd data={offerCatalogSchema(categories)} />
+      <JsonLd data={faqSchema(FAQ)} />
       <section className="mx-auto max-w-7xl px-6 pb-16 pt-12 lg:px-8 lg:pb-20 lg:pt-16">
         <PageHeader
           eyebrow="Behandelingen & tarieven"
@@ -55,12 +58,16 @@ export default async function TreatmentsPage() {
 
       <Ornament className="px-6" />
 
+      <FaqSection />
+
+      <Ornament className="px-6" />
+
       <section className="mx-auto max-w-3xl px-6 py-16 text-center lg:py-20">
         <p className="font-serif text-2xl leading-snug text-stone-900 sm:text-3xl">
           Twijfel je welke behandeling bij je past?
         </p>
         <p className="mt-3 text-[15px] text-primary/65">
-          Stuur een berichtje of boek gewoon: Belise denkt graag met je mee.
+          Stuur een berichtje via WhatsApp of Instagram, of boek gewoon: Belise denkt graag met je mee.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link

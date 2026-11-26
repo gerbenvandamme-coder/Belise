@@ -1,4 +1,5 @@
 import { CONTACT, SALON, isFilledIn } from '@/lib/salon';
+import { FAQ } from '@/lib/faq';
 import { fetchTreatmentCategories } from '@/lib/services';
 import { createPublicSupabase } from '@/lib/supabasePublic';
 import { CONTENT_UPDATED, PUBLIC_PAGES, SITE_DESCRIPTION, SITE_NAME, absoluteUrl } from '@/lib/site';
@@ -21,7 +22,7 @@ function contactLines(): string[] {
     `- Adres: ${SALON.address.street}, ${SALON.address.postalCity}, België`,
     '- Werkwijze: enkel op afspraak; vrije momenten staan in de online agenda',
     `- Online boeken: ${absoluteUrl('/booking')}`,
-    `- Instagram: ${SALON.instagram.url}`,
+    `- Instagram: ${SALON.instagram.url} (berichten via Instagram of WhatsApp)`,
   ];
   if (isFilledIn(CONTACT.phone)) lines.push(`- Telefoon: ${CONTACT.phone}`);
   if (isFilledIn(CONTACT.email)) lines.push(`- E-mail: ${CONTACT.email}`);
@@ -59,7 +60,7 @@ export async function buildLlmsFullTxt(): Promise<string> {
     '',
     `> ${SITE_DESCRIPTION}`,
     '',
-    `Laatst bijgewerkt: ${CONTENT_UPDATED}. Prijzen in euro, inclusief eventuele btw. Richtprijzen: de definitieve prijs hangt af van lengte, design en het verwijderen van een oude set.`,
+    `Laatst bijgewerkt: ${CONTENT_UPDATED}. Prijzen in euro; Belise is vrijgesteld van btw. Richtprijzen: de definitieve prijs hangt af van lengte, design en het verwijderen van een oude set.`,
     '',
     '## Over de salon',
     'Belise is een beautysalon in Opwijk (Vlaams-Brabant, België). Elke behandeling gebeurt op afspraak, zodat er tijd is voor persoonlijk advies. Klanten boeken en beheren hun afspraken online met een account; bij het boeken kunnen ze foto\'s van hun huidige nagels of een inspiratiebeeld toevoegen.',
@@ -90,7 +91,8 @@ export async function buildLlmsFullTxt(): Promise<string> {
     '## Veelgestelde vragen',
     '- Kan ik zonder afspraak langskomen? Nee, Belise werkt enkel op afspraak.',
     `- Hoe boek ik? Online via ${absoluteUrl('/booking')}: kies een behandeling en een vrij moment.`,
-    '- Waar is de salon? In de Nanovestraat 71 in 1745 Opwijk.',
+    `- Waar is de salon? ${SALON.address.street}, ${SALON.address.postalCity}.`,
+    ...FAQ.map((item) => `- ${item.question} ${item.answer}`),
     '',
   );
   return out.join('\n');

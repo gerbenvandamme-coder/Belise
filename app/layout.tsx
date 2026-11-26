@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   creator: SITE_NAME,
   publisher: SITE_NAME,
   category: 'Beauty',
-  keywords: ['beautysalon Opwijk', 'gelnagels Opwijk', 'BIAB Opwijk', 'nagelstudio Opwijk', 'ontharing Opwijk', 'kapper Opwijk', 'Belise'],
+  keywords: ['beautysalon Opwijk', 'gelnagels Opwijk', 'nagelstudio Opwijk', 'ontharing Opwijk', 'kapper Opwijk', 'Belise'],
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',

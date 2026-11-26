@@ -168,3 +168,16 @@ export function offerCatalogSchema(categories: readonly TreatmentCategory[]) {
     })),
   };
 }
+
+/** FAQPage-schema voor de veelgestelde vragen. */
+export function faqSchema(items: readonly { question: string; answer: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
+    })),
+  };
+}

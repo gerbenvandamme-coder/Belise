@@ -7,7 +7,9 @@ import Link from 'next/link';
 import { ArrowRight, CalendarCheck, HeartHandshake, MapPin } from 'lucide-react';
 import Ornament from '@/components/Ornament';
 import PageHeader from '@/components/PageHeader';
-import { ABOUT, SALON, isFilledIn } from '@/lib/salon';
+import { SALON } from '@/lib/salon';
+import { fetchSiteContent } from '@/lib/siteContent';
+import { createPublicSupabase } from '@/lib/supabasePublic';
 
 const TITLE = 'Over Belise | Beautysalon in Opwijk';
 const DESCRIPTION =
@@ -36,8 +38,12 @@ const PRINCIPLES = [
   },
 ] as const;
 
-export default function OverPage() {
-  const ownerName = isFilledIn(ABOUT.ownerName) ? ABOUT.ownerName : null;
+// Tekst en foto's worden beheerd in /admin → Website en elke minuut ververst.
+export const revalidate = 60;
+
+export default async function OverPage() {
+  const site = await fetchSiteContent(createPublicSupabase());
+  const ownerName = site.ownerName;
 
   return (
     <main className="flex-1">
@@ -60,9 +66,9 @@ export default function OverPage() {
               </p>
             </PageHeader>
 
-            {ABOUT.story.length > 0 && (
+            {site.story.length > 0 && (
               <div className="reveal mt-8 max-w-xl space-y-4 text-[15px] leading-relaxed text-primary/75">
-                {ABOUT.story.map((paragraph) => (
+                {site.story.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}
               </div>
@@ -93,7 +99,8 @@ export default function OverPage() {
               />
               <div className="shadow-luxe-lg relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] ring-1 ring-taupe/30">
                 <Image
-                  src="/assets/Front/Clean%20front%20picture.jpg"
+                  src={site.aboutPhoto}
+                  unoptimized={!site.aboutPhoto.startsWith('/')}
                   alt={ownerName ? `${ownerName}, zaakvoerder van Belise` : 'Zaakvoerder van Belise'}
                   fill
                   priority
@@ -141,16 +148,17 @@ export default function OverPage() {
           </h2>
         </div>
 
-        {ABOUT.photos.length > 0 ? (
+        {site.salonPhotos.length > 0 ? (
           <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {ABOUT.photos.map((photo) => (
+            {site.salonPhotos.map((src, index) => (
               <li
-                key={photo.src}
+                key={src}
                 className="reveal shadow-luxe relative aspect-[4/3] overflow-hidden rounded-[1.75rem] ring-1 ring-taupe/25"
               >
                 <Image
-                  src={photo.src}
-                  alt={photo.alt}
+                  src={src}
+                  unoptimized={!src.startsWith('/')}
+                  alt={`Salon Belise, foto ${index + 1}`}
                   fill
                   sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
                   className="object-cover"

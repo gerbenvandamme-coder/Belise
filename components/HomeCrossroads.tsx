@@ -44,9 +44,12 @@ function Head({ n, label, dark = false }: { n: string; label: string; dark?: boo
 export default function HomeCrossroads({
   categoryTitles,
   cutouts,
+  ownerPhoto = '/assets/Front/Clean%20front%20picture.jpg',
 }: {
   categoryTitles: readonly string[];
   cutouts: readonly Cutout[];
+  /** Foto van de zaakvoerder, beheerd in /admin → Website. */
+  ownerPhoto?: string;
 }) {
   const fan = cutouts.slice(0, 3);
   const fanPoses = [
@@ -183,7 +186,8 @@ export default function HomeCrossroads({
             </div>
             <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-2xl ring-1 ring-taupe/30 transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none">
               <Image
-                src="/assets/Front/Clean%20front%20picture.jpg"
+                src={ownerPhoto}
+                unoptimized={!ownerPhoto.startsWith('/')}
                 alt=""
                 fill
                 sizes="5rem"
@@ -199,7 +203,7 @@ export default function HomeCrossroads({
           <div className="mt-10">
             <h3 className="font-serif text-3xl leading-tight text-stone-900">Contact &amp; route</h3>
             <p className="mt-2 max-w-xs text-[14px] leading-relaxed text-primary/65">
-              Bel, stuur een bericht of bekijk de kaart. Nanovestraat 71, Opwijk.
+              Bel, stuur een bericht of bekijk de kaart. Nanovestraat 71 A, Opwijk.
             </p>
           </div>
         </Link>

@@ -21,6 +21,8 @@ import {
   SECTION_LABEL,
 } from '@/lib/admin/ui';
 import type { AdminProfileRow, BookingRow } from '@/lib/database.types';
+import { BOOKING_BUCKET } from '@/lib/supabaseStorage';
+import { PORTFOLIO_BUCKET } from '@/lib/portfolio';
 
 export default function CustomersTab() {
   const [profiles, setProfiles] = useState<AdminProfileRow[] | null>(null);
@@ -74,6 +76,10 @@ export default function CustomersTab() {
         profile={selected}
         onBack={() => setSelectedId(null)}
         onSaved={() => setReloadToken((token) => token + 1)}
+        onDeleted={() => {
+          setSelectedId(null);
+          setReloadToken((token) => token + 1);
+        }}
       />
     );
   }
@@ -110,7 +116,14 @@ export default function CustomersTab() {
               onClick={() => setSelectedId(profile.id)}
               className={`flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-taupe/40 bg-card px-4 py-3 text-left hover:bg-canvas ${FOCUS_RING}`}
             >
-              <span className="font-medium text-primary">{profile.full_name}</span>
+              <span className="font-medium text-primary">
+                {profile.full_name}
+                {profile.no_show_count > 0 && (
+                  <span className="ml-2 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-800">
+                    {profile.no_show_count}× no-show
+                  </span>
+                )}
+              </span>
               <span className="truncate text-xs text-primary/60">
                 {profile.phone ?? profile.email}
               </span>
@@ -126,9 +139,16 @@ type CustomerDossierProps = {
   profile: AdminProfileRow;
   onBack: () => void;
   onSaved: () => void;
+  onDeleted: () => void;
 };
 
-function CustomerDossier({ profile, onBack, onSaved }: CustomerDossierProps) {
+function CustomerDossier({ profile, onBack, onSaved, onDeleted }: CustomerDossierProps) {
+  const [noShows, setNoShows] = useState(profile.no_show_count ?? 0);
+  const [photoConsent, setPhotoConsent] = useState(profile.photo_consent === true);
+  const [flagStatus, setFlagStatus] = useState<string | null>(null);
+  const [confirmErase, setConfirmErase] = useState(false);
+  const [eraseText, setEraseText] = useState('');
+  const [erasing, setErasing] = useState(false);
   const [hairFormula, setHairFormula] = useState(profile.hair_color_formula ?? '');
   const [nailPreferences, setNailPreferences] = useState(profile.nail_preferences ?? '');
   const [internalNotes, setInternalNotes] = useState(profile.internal_notes ?? '');
@@ -183,6 +203,70 @@ function CustomerDossier({ profile, onBack, onSaved }: CustomerDossierProps) {
     onSaved();
   }
 
+  async function saveFlags(patch: { no_show_count?: number; photo_consent?: boolean }) {
+    setFlagStatus(null);
+    const update = {
+      ...patch,
+      ...(patch.photo_consent !== undefined
+        ? { photo_consent_at: patch.photo_consent ? new Date().toISOString() : null }
+        : {}),
+    };
+    const { error } = await supabase.from('profiles').update(update).eq('id', profile.id);
+    if (error) {
+      setFlagStatus('Opslaan mislukt. Probeer opnieuw.');
+      return false;
+    }
+    setFlagStatus(
+      patch.photo_consent === false
+        ? 'Toestemming ingetrokken. Gekoppelde portfoliofoto\'s zijn offline gehaald.'
+        : 'Opgeslagen.',
+    );
+    onSaved();
+    return true;
+  }
+
+  async function changeNoShows(delta: number) {
+    const next = Math.max(0, noShows + delta);
+    if (next === noShows) return;
+    const previous = noShows;
+    setNoShows(next);
+    if (!(await saveFlags({ no_show_count: next }))) setNoShows(previous);
+  }
+
+  async function toggleConsent() {
+    const next = !photoConsent;
+    setPhotoConsent(next);
+    if (!(await saveFlags({ photo_consent: next }))) setPhotoConsent(!next);
+  }
+
+  /** Wist alles van deze klant: foto's in de opslag, afspraken, portfolio-koppelingen en het account. */
+  async function eraseClient() {
+    setErasing(true);
+    setFlagStatus(null);
+    const [{ data: ownBookings }, { data: ownPhotos }] = await Promise.all([
+      supabase.from('bookings').select('*').eq('client_id', profile.id),
+      supabase.from('portfolio_items').select('*').eq('client_id', profile.id),
+    ]);
+    const referencePaths = (ownBookings ?? [])
+      .flatMap((booking) => [booking.reference_now_path, booking.inspiration_path])
+      .filter((path): path is string => Boolean(path));
+    const portfolioPaths = (ownPhotos ?? []).map((item) => item.image_path);
+    if (referencePaths.length > 0) {
+      await supabase.storage.from(BOOKING_BUCKET).remove(referencePaths);
+    }
+    if (portfolioPaths.length > 0) {
+      await supabase.storage.from(PORTFOLIO_BUCKET).remove(portfolioPaths);
+    }
+
+    const { error } = await supabase.rpc('admin_delete_client', { p_client_id: profile.id });
+    setErasing(false);
+    if (error) {
+      setFlagStatus('Wissen mislukt. Probeer opnieuw of contacteer de ontwikkelaar.');
+      return;
+    }
+    onDeleted();
+  }
+
   const hasAllergy = Boolean(profile.allergies && profile.allergy_consent_at);
 
   return (
@@ -211,6 +295,80 @@ function CustomerDossier({ profile, onBack, onSaved }: CustomerDossierProps) {
         {hasAllergy && (
           <p role="alert" className="rounded-2xl bg-red-700 px-4 py-3 text-sm font-semibold text-white">
             Allergie: {profile.allergies}
+          </p>
+        )}
+      </section>
+
+      <section aria-labelledby="flags-heading" className={`${CARD_CLASS} space-y-5`}>
+        <h2 id="flags-heading" className={SECTION_LABEL}>
+          No-shows & fototoestemming
+        </h2>
+
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-medium text-primary">No-shows</p>
+            <p className="text-xs text-primary/60">
+              Telt automatisch mee als je een afspraak op &quot;No-show&quot; zet.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="No-show eraf"
+              onClick={() => void changeNoShows(-1)}
+              disabled={noShows === 0}
+              className={`h-12 w-12 rounded-full border border-taupe/50 text-lg disabled:opacity-40 ${FOCUS_RING}`}
+            >
+              −
+            </button>
+            <span
+              className={`min-w-10 text-center font-serif text-2xl ${noShows > 0 ? 'text-red-800' : 'text-primary'}`}
+              aria-live="polite"
+            >
+              {noShows}
+            </span>
+            <button
+              type="button"
+              aria-label="No-show erbij"
+              onClick={() => void changeNoShows(1)}
+              className={`h-12 w-12 rounded-full border border-taupe/50 text-lg ${FOCUS_RING}`}
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-t border-taupe/30 pt-5">
+          <div>
+            <p className="font-medium text-primary">Fototoestemming</p>
+            <p className="text-xs text-primary/60">
+              Foto&apos;s van het resultaat mogen in het portfolio en op Instagram.
+              {profile.photo_consent_at && photoConsent
+                ? ` Sinds ${new Date(profile.photo_consent_at).toLocaleDateString('nl-BE')}.`
+                : ''}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={photoConsent}
+            aria-label="Fototoestemming"
+            onClick={() => void toggleConsent()}
+            className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${FOCUS_RING} ${
+              photoConsent ? 'bg-accent' : 'bg-taupe/60'
+            }`}
+          >
+            <span
+              className={`absolute left-1 top-1 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+                photoConsent ? 'translate-x-6' : ''
+              }`}
+            />
+          </button>
+        </div>
+
+        {flagStatus && (
+          <p role="status" className="text-sm text-primary/80">
+            {flagStatus}
           </p>
         )}
       </section>
@@ -288,6 +446,58 @@ function CustomerDossier({ profile, onBack, onSaved }: CustomerDossierProps) {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section aria-labelledby="erase-heading" className="space-y-3 rounded-[1.75rem] border border-red-200 p-5">
+        <h2 id="erase-heading" className={SECTION_LABEL}>
+          Alle gegevens wissen
+        </h2>
+        <p className="text-sm leading-relaxed text-primary/75">
+          Wist het account, alle afspraken, geüploade foto&apos;s en gekoppelde portfoliofoto&apos;s
+          van {profile.full_name}. Dit kan niet ongedaan gemaakt worden. Gebruik dit als een klant
+          vraagt om vergeten te worden (AVG).
+        </p>
+        {confirmErase ? (
+          <div className="space-y-3">
+            <label className="block text-sm text-primary/80">
+              Typ WISSEN om te bevestigen
+              <input
+                value={eraseText}
+                onChange={(event) => setEraseText(event.target.value)}
+                autoComplete="off"
+                className={`mt-2 ${INPUT_CLASS}`}
+              />
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={eraseText.trim().toUpperCase() !== 'WISSEN' || erasing}
+                onClick={() => void eraseClient()}
+                className={`${BUTTON_PRIMARY} flex-1 bg-red-800 hover:bg-red-900 disabled:opacity-50`}
+              >
+                {erasing ? 'Bezig met wissen…' : 'Definitief wissen'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmErase(false);
+                  setEraseText('');
+                }}
+                className={BUTTON_SECONDARY}
+              >
+                Annuleren
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmErase(true)}
+            className={`${BUTTON_SECONDARY} w-full text-red-800`}
+          >
+            Gegevens van deze klant wissen
+          </button>
+        )}
       </section>
     </div>
   );

@@ -10,7 +10,7 @@ import { createPublicSupabase } from '@/lib/supabasePublic';
 
 const TITLE = 'Portfolio | Belise Beauty Opwijk';
 const DESCRIPTION =
-  'Recent werk van Belise in Opwijk: gelnagels, BIAB, nail art en haarverzorging, te filteren op stijl zoals French of chroom.';
+  'Recent werk van Belise in Opwijk: gelnagels, nail art en haarverzorging, te filteren op stijl zoals French of chroom.';
 
 const PATH = '/portfolio';
 const TYPE = 'CollectionPage';

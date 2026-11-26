@@ -22,13 +22,18 @@ export type ProfileRow = {
   hair_color_formula: string | null;
   nail_preferences: string | null;
   internal_notes: string | null;
+  /** Aantal keer niet komen opdagen zonder verwittigen. */
+  no_show_count: number;
+  /** Toestemming om foto's van het resultaat te delen (portfolio, Instagram). */
+  photo_consent: boolean;
+  photo_consent_at: string | null;
   created_at: string;
 };
 
 /** Wat de klant-UI ziet: geen interne salonvelden. */
 export type ClientOwnProfileRow = Omit<
   ProfileRow,
-  'hair_color_formula' | 'nail_preferences' | 'internal_notes'
+  'hair_color_formula' | 'nail_preferences' | 'internal_notes' | 'no_show_count' | 'photo_consent' | 'photo_consent_at'
 >;
 
 export type AdminProfileRow = ProfileRow;
@@ -102,6 +107,8 @@ export type PortfolioItemRow = {
   is_published: boolean;
   /** Uitgeknipte foto met doorzichtige achtergrond (PNG). Wordt zonder bijsnijden getoond. */
   has_transparency: boolean;
+  /** Klant op de foto, uit het klantenbestand. */
+  client_id: string | null;
   created_at: string;
 };
 
@@ -202,6 +209,10 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
+      };
+      admin_delete_client: {
+        Args: { p_client_id: string };
+        Returns: undefined;
       };
       delete_own_account: {
         Args: Record<PropertyKey, never>;
