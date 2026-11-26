@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { DEMO_MODE, supabase } from '@/lib/supabase';
 import { BUTTON_PRIMARY, CARD_CLASS, INPUT_CLASS } from '@/lib/admin/ui';
 
 type GuardState = 'checking' | 'signed-out' | 'allowed';
@@ -78,7 +78,16 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   }
 
   if (state === 'allowed') {
-    return <>{children}</>;
+    return (
+      <>
+        {DEMO_MODE && (
+          <p className="sticky top-0 z-50 bg-accent-dark px-4 py-1.5 text-center text-xs font-medium text-white">
+            Demo-omgeving · voorbeeldgegevens · niets wordt opgeslagen
+          </p>
+        )}
+        {children}
+      </>
+    );
   }
 
   if (state === 'checking') {
