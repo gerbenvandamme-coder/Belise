@@ -110,6 +110,9 @@ function seedProfiles(): Row[] {
     hair_color_formula: null,
     nail_preferences: null,
     internal_notes: null,
+    no_show_count: 0,
+    photo_consent: false,
+    photo_consent_at: null,
     created_at: isoAgo(24 * 30),
   };
   return [
@@ -126,6 +129,9 @@ function seedProfiles(): Row[] {
       hair_color_formula: index === 1 ? '7.1 + 6% oxidatie, 30 min' : null,
       nail_preferences: nails,
       internal_notes: index === 0 ? 'Vaste klant, komt elke 3 weken.' : null,
+      no_show_count: index === 3 ? 2 : 0,
+      photo_consent: index % 2 === 0,
+      photo_consent_at: index % 2 === 0 ? isoAgo(24 * (15 + index)) : null,
       created_at: isoAgo(24 * (20 + index)),
     })),
   ];
@@ -233,7 +239,8 @@ function seedOverrides(): Row[] {
   ];
 }
 
-function seedPortfolio(): Row[] {
+function seedPortfolio(profiles: Row[]): Row[] {
+  const consenting = profiles.filter((profile) => profile.role === 'client' && profile.photo_consent);
   const nails = [
     '/assets/Hands/hand-licht.webp',
     '/assets/Hands/hand-warm.webp',
@@ -249,6 +256,7 @@ function seedPortfolio(): Row[] {
     sort_order: index,
     is_published: index !== 3,
     has_transparency: false,
+    client_id: index < 2 ? consenting[index % consenting.length]?.id ?? null : null,
     created_at: isoAgo(24 * (index + 1)),
   }));
 }
@@ -273,7 +281,7 @@ function createStore(): Record<string, Row[]> {
     site_settings: seedSettings(),
     weekly_availability: seedAvailability(),
     date_overrides: seedOverrides(),
-    portfolio_items: seedPortfolio(),
+    portfolio_items: seedPortfolio(profiles),
   };
 }
 
@@ -430,7 +438,17 @@ class DemoQuery implements PromiseLike<Result> {
       }
     } else if (this.op === 'update') {
       affected = rows.filter((row) => this.matches(row));
-      affected.forEach((row) => Object.assign(row, this.payload));
+      const nextStatus = (this.payload as Row | null)?.status;
+      affected.forEach((row) => {
+        // Bootst de trigger count_no_show na.
+        if (this.table === 'bookings' && nextStatus !== undefined && nextStatus !== row.status) {
+          const profile = this.store.profiles?.find((item) => item.id === row.client_id);
+          if (profile && nextStatus === 'no_show') profile.no_show_count = Number(profile.no_show_count ?? 0) + 1;
+          else if (profile && row.status === 'no_show')
+            profile.no_show_count = Math.max(0, Number(profile.no_show_count ?? 0) - 1);
+        }
+        Object.assign(row, this.payload);
+      });
     } else if (this.op === 'delete') {
       affected = rows.filter((row) => this.matches(row));
       this.store[this.table] = rows.filter((row) => !affected.includes(row));
@@ -489,6 +507,15 @@ export function createDemoClient() {
     rpc: (name: string, args: Record<string, unknown> = {}) => {
       if (name === 'get_available_slots') return ok(makeSlots());
       if (name === 'is_admin') return ok(true);
+      if (name === 'admin_delete_client') {
+        const id = args.p_client_id;
+        store.profiles = store.profiles.filter((row) => row.id !== id);
+        store.admin_profiles = store.profiles;
+        store.client_own_profile = store.profiles;
+        store.bookings = store.bookings.filter((row) => row.client_id !== id);
+        store.portfolio_items = store.portfolio_items.filter((row) => row.client_id !== id);
+        return ok(null);
+      }
       if (name === 'create_booking') {
         const row: Row = {
           id: args.p_booking_id ?? uuid(),
