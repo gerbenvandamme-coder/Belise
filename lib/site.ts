@@ -16,12 +16,12 @@ export const absoluteUrl = (path = '/') => `${SITE_URL}${path.startsWith('/') ? 
 export const BUSINESS_ID = `${SITE_URL}/#salon`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 
+// De nageldesigner (/designer) staat uit; zie lib/features.ts.
 export const PUBLIC_PAGES: readonly { path: string; name: string; description: string; priority: number }[] = [
   { path: '/', name: 'Home', description: SITE_DESCRIPTION, priority: 1 },
   { path: '/behandelingen', name: 'Behandelingen en tarieven', description: 'Alle behandelingen met prijs en duur: nagels, ontharing en haarverzorging.', priority: 0.9 },
   { path: '/booking', name: 'Afspraak maken', description: 'Online een afspraak boeken op een vrijgegeven moment.', priority: 0.9 },
   { path: '/portfolio', name: 'Portfolio', description: 'Recent werk per behandeling, te filteren op stijl.', priority: 0.7 },
-  { path: '/designer', name: 'Nageldesigner', description: 'Online nageldesigner: test vorm, lengte, kleur en finish op een echte hand.', priority: 0.7 },
   { path: '/over', name: 'Over Belise', description: 'Over de salon en de werkwijze.', priority: 0.6 },
   { path: '/contact', name: 'Contact en route', description: `Adres ${SALON.address.street}, ${SALON.address.postalCity}; bellen, WhatsApp, mail of een bericht via je account.`, priority: 0.7 },
   { path: '/algemene-voorwaarden', name: 'Algemene voorwaarden', description: 'Voorwaarden voor afspraken.', priority: 0.2 },

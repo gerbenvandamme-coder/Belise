@@ -1,5 +1,6 @@
 import { CONTACT, SALON, isFilledIn } from '@/lib/salon';
 import { FAQ } from '@/lib/faq';
+import { NAIL_DESIGNER_ENABLED } from '@/lib/features';
 import { fetchTreatmentCategories } from '@/lib/services';
 import { createPublicSupabase } from '@/lib/supabasePublic';
 import { CONTENT_UPDATED, PUBLIC_PAGES, SITE_DESCRIPTION, SITE_NAME, absoluteUrl } from '@/lib/site';
@@ -85,7 +86,9 @@ export async function buildLlmsFullTxt(): Promise<string> {
   out.push(
     '',
     '## Extra diensten op de website',
-    `- Nageldesigner (${absoluteUrl('/designer')}): test vorm (square, squoval, rond, ovaal, amandel, coffin), lengte, kleur, finish (glans, mat, chroom) en nail art (French, micro-French, ombre, polka dots) op een echte hand, en boek het ontwerp meteen.`,
+    ...(NAIL_DESIGNER_ENABLED
+      ? [`- Nageldesigner (${absoluteUrl('/designer')}): test vorm (square, squoval, rond, ovaal, amandel, coffin), lengte, kleur, finish (glans, mat, chroom) en nail art (French, micro-French, ombre, polka dots) op een echte hand, en boek het ontwerp meteen.`]
+      : []),
     `- Portfolio (${absoluteUrl('/portfolio')}): recent werk per behandeling, met stijllabels.`,
     '',
     '## Veelgestelde vragen',

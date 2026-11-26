@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Palette } from 'lucide-react';
+import { NAIL_DESIGNER_ENABLED } from '@/lib/features';
 import HomeCrossroads from '@/components/HomeCrossroads';
 import JsonLd from '@/components/JsonLd';
 import Ornament from '@/components/Ornament';
@@ -129,13 +130,22 @@ export default async function HomePage() {
               >
                 Afspraak maken
               </Link>
-              <Link
-                href="/designer"
-                className={`${buttonBase} border border-primary/25 text-primary hover:border-primary hover:bg-blush/50`}
-              >
-                <Palette size={16} aria-hidden="true" />
-                Ontwerp je nagels
-              </Link>
+              {NAIL_DESIGNER_ENABLED ? (
+                <Link
+                  href="/designer"
+                  className={`${buttonBase} border border-primary/25 text-primary hover:border-primary hover:bg-blush/50`}
+                >
+                  <Palette size={16} aria-hidden="true" />
+                  Ontwerp je nagels
+                </Link>
+              ) : (
+                <Link
+                  href="/portfolio"
+                  className={`${buttonBase} border border-primary/25 text-primary hover:border-primary hover:bg-blush/50`}
+                >
+                  Bekijk ons werk
+                </Link>
+              )}
             </div>
 
             <ul className="mt-10 grid max-w-lg grid-cols-3 divide-x divide-taupe/40 border-y border-taupe/30 py-4 text-center">

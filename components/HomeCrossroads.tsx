@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { NAIL_DESIGNER_ENABLED } from '@/lib/features';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import NailCanvas from '@/components/NailCanvas';
@@ -114,7 +115,10 @@ export default function HomeCrossroads({
         </Link>
 
         {/* 03 Portfolio */}
-        <Link href="/portfolio" className={`${TONE.blush} min-h-[19rem] lg:col-span-3 ${FOCUS}`}>
+        <Link
+          href="/portfolio"
+          className={`${TONE.blush} min-h-[19rem] ${NAIL_DESIGNER_ENABLED ? 'lg:col-span-3' : 'lg:col-span-6'} ${FOCUS}`}
+        >
           <Head n="03" label="Portfolio" />
           {fan.length > 0 && (
             <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-14 flex h-40 justify-center">
@@ -143,7 +147,8 @@ export default function HomeCrossroads({
           </div>
         </Link>
 
-        {/* 04 Designer */}
+        {/* 04 Designer: uitgezet via lib/features.ts */}
+        {NAIL_DESIGNER_ENABLED && (
         <Link href="/designer" className={`${TONE.champagne} min-h-[19rem] lg:col-span-3 ${FOCUS}`}>
           <Head n="04" label="Nageldesigner" />
           <div className="mt-6 grid items-end gap-5 sm:grid-cols-[1fr_1.15fr]">
@@ -173,10 +178,11 @@ export default function HomeCrossroads({
             </div>
           </div>
         </Link>
+        )}
 
         {/* 05 Over */}
         <Link href="/over" className={`${TONE.champagne} lg:col-span-3 ${FOCUS}`}>
-          <Head n="05" label="Over" />
+          <Head n={NAIL_DESIGNER_ENABLED ? '05' : '04'} label="Over" />
           <div className="mt-10 flex items-end justify-between gap-6">
             <div>
               <h3 className="font-serif text-3xl leading-tight text-stone-900">Over Belise</h3>
@@ -199,7 +205,7 @@ export default function HomeCrossroads({
 
         {/* 06 Contact */}
         <Link href="/contact" className={`${TONE.ivory} lg:col-span-3 ${FOCUS}`}>
-          <Head n="06" label="Contact" />
+          <Head n={NAIL_DESIGNER_ENABLED ? '06' : '05'} label="Contact" />
           <div className="mt-10">
             <h3 className="font-serif text-3xl leading-tight text-stone-900">Contact &amp; route</h3>
             <p className="mt-2 max-w-xs text-[14px] leading-relaxed text-primary/65">

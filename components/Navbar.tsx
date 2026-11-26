@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { NAIL_DESIGNER_ENABLED } from '@/lib/features';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, type MouseEvent } from 'react';
@@ -11,10 +12,10 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 const NAV_LINKS = [
   { label: 'Behandelingen', href: '/behandelingen' },
   { label: 'Portfolio', href: '/portfolio' },
-  { label: 'Nageldesigner', href: '/designer' },
+  ...(NAIL_DESIGNER_ENABLED ? [{ label: 'Nageldesigner', href: '/designer' }] : []),
   { label: 'Over', href: '/over' },
   { label: 'Contact', href: '/contact' },
-] as const;
+];
 
 const CTA_HREF = '/booking';
 const CTA_LABEL = 'Afspraak maken';
