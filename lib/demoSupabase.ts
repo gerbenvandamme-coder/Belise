@@ -241,12 +241,10 @@ function seedOverrides(): Row[] {
 
 function seedPortfolio(profiles: Row[]): Row[] {
   const consenting = profiles.filter((profile) => profile.role === 'client' && profile.photo_consent);
-  const nails = [
-    '/assets/Hands/hand-licht.webp',
-    '/assets/Hands/hand-warm.webp',
-    '/assets/Hands/hand-goud.webp',
-    '/assets/Hands/hand-donker.webp',
-  ];
+  // Uitgeknipte portfolio-PNG's; nooit de handfoto's van de nageldesigner.
+  const nails = [1, 2, 3, 4].map(
+    (n) => `/assets/showcase_cutouts/${encodeURIComponent(['Screenshot 2026-11-07 160746.png', 'Screenshot 2026-11-07 160813.png', 'Screenshot 2026-11-07 175637.png', 'Screenshot 2026-11-07 175713.png'][n - 1])}`,
+  );
   return nails.map((path, index) => ({
     id: uuid(),
     category_id: 'nails',
@@ -255,7 +253,7 @@ function seedPortfolio(profiles: Row[]): Row[] {
     tags: [['nude', 'amandel'], ['bordeaux', 'chroom'], ['goud'], ['french', 'ombre']][index],
     sort_order: index,
     is_published: index !== 3,
-    has_transparency: false,
+    has_transparency: true,
     client_id: index < 2 ? consenting[index % consenting.length]?.id ?? null : null,
     created_at: isoAgo(24 * (index + 1)),
   }));
@@ -550,12 +548,12 @@ export function createDemoClient() {
     storage: {
       from: () => ({
         getPublicUrl: (path: string) => ({
-          data: { publicUrl: uploadedUrls.get(path) ?? (path.startsWith('/') ? path : '/assets/Hands/hand-licht.webp') },
+          data: { publicUrl: uploadedUrls.get(path) ?? (path.startsWith('/') ? path : '/assets/showcase_cutouts/Screenshot%202026-11-07%20160746.png') },
         }),
         createSignedUrl: (path: string) =>
-          ok({ signedUrl: path.startsWith('/') ? path : '/assets/Hands/hand-warm.webp' }),
+          ok({ signedUrl: path.startsWith('/') ? path : '/assets/showcase_cutouts/Screenshot%202026-11-07%20160757.png' }),
         createSignedUrls: (paths: string[]) =>
-          ok(paths.map((path) => ({ path, signedUrl: path.startsWith('/') ? path : '/assets/Hands/hand-warm.webp', error: null }))),
+          ok(paths.map((path) => ({ path, signedUrl: path.startsWith('/') ? path : '/assets/showcase_cutouts/Screenshot%202026-11-07%20160757.png', error: null }))),
         upload: (path: string, file: Blob) => {
           const url = typeof URL !== 'undefined' && file ? URL.createObjectURL(file) : path;
           uploadedUrls.set(path, url);
