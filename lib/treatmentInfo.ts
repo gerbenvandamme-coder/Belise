@@ -19,27 +19,26 @@ export const GROUP_INFO: Record<string, InfoBlock> = {
     tips: [
       'Bij een bijwerking wordt de uitgroei opgevuld en de vorm opnieuw gezet.',
       'Kom je later dan de termijn in de naam, kies dan de bijwerking met "+".',
+      'Gelnagels houden gemiddeld 4 weken.',
+      'Breekt er binnen een week een nagel af? Dan herstellen we die gratis.',
       'Twijfel je over vorm of kleur? Probeer het eerst in de nageldesigner.',
-    ],
-  },
-  BIAB: {
-    description:
-      'BIAB (Builder In A Bottle) is een soepele builder-gel die je natuurlijke nagel versterkt. Ideaal als je je eigen nagels wilt laten groeien met een verzorgde, natuurlijke look.',
-    tips: [
-      'Met "+ kleur" krijg je een kleurlaag naar keuze bovenop.',
-      'Kom je later dan de termijn in de naam, kies dan de bijwerking met "+".',
+      'Laat de toestand van je nagels of huid een behandeling niet toe, dan kan de schoonheidsspecialiste beslissen ze niet (opnieuw) uit te voeren.',
     ],
   },
   'Manicure & Verwijderen': {
     description:
-      'Verzorging van handen en nagels: nagels vijlen en in vorm brengen, nagelriemen verzorgen en eventueel lakken. Ook voor het veilig verwijderen van gel of BIAB.',
-    tips: ['Laat gel of BIAB altijd vakkundig verwijderen om je natuurlijke nagel te sparen.'],
+      'Verzorging van handen en nagels: nagels vijlen en in vorm brengen, nagelriemen verzorgen en eventueel lakken. Ook voor het veilig verwijderen van gel.',
+    tips: [
+      'Laat gel altijd vakkundig verwijderen om je natuurlijke nagel te sparen.',
+      'Kom je met nagels van een andere salon? Voeg dan het supplement van €5 toe: de verwijdermethode ligt vooraf niet vast.',
+    ],
   },
   Ontharing: {
     description:
       'Ontharing met wax voor een gladde huid. De haartjes worden met de wortel verwijderd, waardoor het resultaat langer meegaat dan scheren.',
     tips: [
-      'Laat je haar vooraf enkele weken groeien zodat de wax het goed kan vastnemen.',
+      'Je haartjes moeten minstens 1 cm lang zijn, zodat de wax ze goed kan vastnemen.',
+      'Kom met een propere, verzorgde huid.',
       'Vermijd zon, sauna en scrubben vlak na de behandeling.',
     ],
   },
@@ -54,6 +53,7 @@ export const GROUP_INFO: Record<string, InfoBlock> = {
     tips: [
       '"Deels" betekent enkel de bovenkant of het gezicht; "volledig" het hele hoofd.',
       'Inwerktijd is inbegrepen in de geplande duur.',
+      'Bij brushing en balayage wordt je haar ter plaatse gewassen.',
     ],
   },
   Massage: {
@@ -67,16 +67,12 @@ export const ITEM_NOTE: Record<string, string> = {
   'gelnagels-nieuwe-set-verlenging': 'Nieuwe set waarbij je nagels verlengd worden tot de lengte die je kiest.',
   'gelnagels-bijwerking-4-weken': 'Bijwerking van een bestaande set tot 4 weken na de vorige afspraak.',
   'gelnagels-bijwerking-plus-4-weken': 'Bijwerking wanneer je vorige afspraak meer dan 4 weken geleden is.',
-  'biab-nieuwe-set': 'Eerste BIAB-laag op je natuurlijke nagels.',
-  'biab-bijwerking-3-weken': 'Bijwerking tot 3 weken na de vorige afspraak.',
-  'biab-bijwerking-plus-3-weken': 'Bijwerking wanneer je vorige afspraak meer dan 3 weken geleden is.',
-  'biab-kleur-3-weken': 'Bijwerking met kleurlaag, tot 3 weken na de vorige afspraak.',
-  'biab-kleur-plus-3-weken': 'Bijwerking met kleurlaag, na meer dan 3 weken.',
-  'biab-op-tenen': 'Versterkende BIAB-laag op de teennagels.',
   manicure: 'Vijlen, vorm geven en nagelriemen verzorgen.',
   'manicure-lakken': 'Manicure afgewerkt met een gewone nagellak.',
-  'verwijderen-gelnagels-biab-manicure': 'Veilig verwijderen van gel of BIAB, gevolgd door een manicure.',
-  snit: 'Wassen en knippen.',
+  'verwijderen-gelnagels-biab-manicure': 'Veilig verwijderen van gel, gevolgd door een manicure.',
+  'supplement-andere-salon':
+    'Voor nagels die in een andere salon gezet zijn. Voeg dit toe aan je nagelbehandeling.',
+  snit: 'Knippen. Je haar wordt niet ter plaatse gewassen.',
   'snit-brushing': 'Knippen en afwerken met een brushing.',
   'kleur-snit': 'Kleuring van de inplant of het hele haar, met snit.',
   'kleur-brushing': 'Kleuring afgewerkt met een brushing.',

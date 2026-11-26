@@ -69,9 +69,10 @@ export default function PrivacyPage() {
             AVG). Ze staan in een afgeschermde opslag en zijn enkel zichtbaar voor jou en Belise.
           </li>
           <li>
-            <strong className="font-medium text-primary">Foto&apos;s van het resultaat op Instagram</strong>
-            : enkel als je dat bij je boeking aanvinkt (toestemming, art. 6.1.a AVG). Je kunt dit
-            altijd intrekken.
+            <strong className="font-medium text-primary">Foto&apos;s van het resultaat</strong>
+            {' '}(portfolio op de site en Instagram): enkel met je toestemming (art. 6.1.a AVG), die
+            we bij je klantgegevens noteren. Je kunt ze altijd intrekken; de foto wordt dan
+            offline gehaald.
           </li>
           <li>
             <strong className="font-medium text-primary">Salonnotities</strong>: bijvoorbeeld je
@@ -95,8 +96,8 @@ export default function PrivacyPage() {
             Supabase verstuurt ook de e-mails met je inloglink.
           </li>
           <li>
-            <strong className="font-medium text-primary">Cloudflare</strong>: hosting en
-            beveiliging van de website. Cloudflare ziet je IP-adres en de pagina&apos;s die je
+            <strong className="font-medium text-primary">Vercel</strong>: hosting van de
+            website. Vercel ziet je IP-adres en de pagina&apos;s die je
             opvraagt, maar niet je account-, afspraak- of gezondheidsgegevens: die gaan rechtstreeks
             van je browser naar Supabase.
           </li>
@@ -142,7 +143,7 @@ export default function PrivacyPage() {
           <Link href="/account/mijn-afspraken" className="text-accent-dark underline underline-offset-4">
             Mijn afspraken
           </Link>
-          . Voor de andere rechten mail je naar <Fill>{legal.email}</Fill>. We antwoorden binnen
+          , of vragen dat Belise al je gegevens wist. Voor de andere rechten mail je naar <Fill>{legal.email}</Fill>. We antwoorden binnen
           een maand.
         </p>
         <p>

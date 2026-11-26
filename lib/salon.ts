@@ -1,10 +1,10 @@
 // Contactgegevens. Zolang een waarde begint met '[', toont de site ze als 'nog in te vullen'.
 export const CONTACT = {
   /** Zoals getoond op de site, bv. '0470 12 34 56'. */
-  phone: '[IN TE VULLEN: telefoonnummer]',
+  phone: '0488 33 46 95',
   /** Internationaal, enkel cijfers, zonder + of 0 vooraan, bv. '32470123456'. Voor WhatsApp en tel:. */
-  phoneInternational: '[IN TE VULLEN: bv. 32470123456]',
-  email: '[IN TE VULLEN: e-mailadres]',
+  phoneInternational: '32488334695',
+  email: 'lisevrijders@outlook.com',
 } as const;
 
 export function isFilledIn(value: string): boolean {
@@ -15,33 +15,44 @@ export function isFilledIn(value: string): boolean {
 export const SALON = {
   name: 'BELISE',
   address: {
-    street: 'Nanovestraat 71',
+    street: 'Nanovestraat 71 A',
     postalCity: '1745 Opwijk',
   },
   instagram: {
     handle: '_belise._',
     url: 'https://www.instagram.com/_belise._/',
   },
-  // Algemene parkeerinfo. Pas deze tekst aan zodra de echte parkeersituatie bekend is.
   parking:
-    'Parkeer in de Nanovestraat of in de omliggende straten. Let op de plaatselijke parkeerborden. Kom je met de wagen, plan dan een paar minuten extra in om een plek te vinden.',
+    'Je parkeert vlak bij de salon: aan de overkant van de straat langs de zijkant, in de Oude Pastoriedreef of langs de weg in de Millenniumstraat.',
+  /** Betaalmiddelen ter plaatse. */
+  payment: 'Je betaalt ter plaatse na je behandeling, met Payconiq of cash. Een voorschot is niet nodig.',
+  /**
+   * Momenten waarop de zaakvoerder in behandeling is en niet meteen antwoordt.
+   * Wordt discreet getoond op /contact; de toon blijft uitnodigend.
+   */
+  busyHours: [
+    { day: 'Woensdag', hours: '9u – 20u' },
+    { day: 'Donderdag', hours: '9u – 19u' },
+    { day: 'Vrijdag', hours: '7u – 19u' },
+    { day: 'Zaterdag', hours: '7u – 15u' },
+  ] as readonly { day: string; hours: string }[],
   // Gegevens voor de algemene voorwaarden en de privacyverklaring.
   // Zolang een waarde begint met '[', toont de site ze als gemarkeerde placeholder.
   legal: {
-    ownerName: '[IN TE VULLEN: volledige naam zaakvoerder]',
-    legalForm: '[IN TE VULLEN: eenmanszaak / vennootschapsvorm]',
-    enterpriseNumber: '[IN TE VULLEN: ondernemingsnummer (KBO)]',
-    vatStatus: '[IN TE VULLEN: btw-nummer, of vrijgesteld (kleine onderneming, art. 56bis WBTW)]',
+    ownerName: 'Lise Vrijders',
+    legalForm: 'eenmanszaak',
+    enterpriseNumber: '1002.326.338',
+    vatStatus: 'BE 1002.326.338, vrijgesteld van btw (bijzondere vrijstellingsregeling kleine ondernemingen, art. 56bis WBTW)',
     email: CONTACT.email,
     phone: CONTACT.phone,
-    lastUpdated: '15 november 2026',
+    lastUpdated: '26 november 2026',
   },
 } as const;
 
 // Pagina "Over". Waarden die met '[' beginnen worden op de site verborgen tot ze zijn ingevuld.
 export const ABOUT = {
   /** Voornaam of volledige naam van de zaakvoerder, bv. 'Belise'. */
-  ownerName: '[IN TE VULLEN: naam zaakvoerder]',
+  ownerName: 'Lise',
   /** Eigen verhaal in alinea's. Leeg laten tot de bazin het aanlevert. */
   story: [] as readonly string[],
   /** Foto's van de zaak: { src: '/assets/salon/foto-1.jpg', alt: 'Beschrijving' }. */

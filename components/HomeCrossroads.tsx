@@ -199,7 +199,7 @@ export default function HomeCrossroads({
           <div className="mt-10">
             <h3 className="font-serif text-3xl leading-tight text-stone-900">Contact &amp; route</h3>
             <p className="mt-2 max-w-xs text-[14px] leading-relaxed text-primary/65">
-              Bel, stuur een bericht of bekijk de kaart. Nanovestraat 71, Opwijk.
+              Bel, stuur een bericht of bekijk de kaart. Nanovestraat 71 A, Opwijk.
             </p>
           </div>
         </Link>

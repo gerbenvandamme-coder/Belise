@@ -3,16 +3,15 @@ import JsonLd from '@/components/JsonLd';
 import { pageMetadata } from '@/lib/seo';
 import { pageSchema } from '@/lib/structuredData';
 import type { ReactNode } from 'react';
-import { Mail, MessageCircle, MessageSquareText, Phone } from 'lucide-react';
+import { Instagram, Mail, MessageCircle, Phone } from 'lucide-react';
 import MapEmbed from '@/components/MapEmbed';
-import ContactMessageForm from '@/components/ContactMessageForm';
 import Ornament from '@/components/Ornament';
 import PageHeader from '@/components/PageHeader';
 import { CONTACT, SALON, isFilledIn } from '@/lib/salon';
 
 const TITLE = 'Contact & route | Belise Beauty Opwijk';
 const DESCRIPTION =
-  'Belise, Nanovestraat 71, 1745 Opwijk. Bel, stuur een sms, WhatsApp of mail, bekijk de route of stuur een bericht via je account.';
+  'Belise, Nanovestraat 71 A, 1745 Opwijk. Stuur een bericht via WhatsApp of Instagram, bel of mail, en bekijk de route en parking.';
 
 const PATH = '/contact';
 const TYPE = 'ContactPage';
@@ -82,7 +81,7 @@ export default function ContactPage() {
             </>
           }
         >
-          <p>Tik op een knop en je toestel opent meteen de juiste app. Of log in en stuur Belise een bericht via de site.</p>
+          <p>Een vraag of een afspraak verder in de toekomst? Stuur gerust een bericht via WhatsApp of Instagram. Tik op een knop en je toestel opent meteen de juiste app.</p>
         </PageHeader>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -91,12 +90,6 @@ export default function ContactPage() {
             icon={<Phone size={18} aria-hidden="true" />}
             title="Bellen"
             detail={isFilledIn(CONTACT.phone) ? CONTACT.phone : 'Nummer volgt binnenkort'}
-          />
-          <ContactTile
-            href={hasPhone ? `sms:+${CONTACT.phoneInternational}` : null}
-            icon={<MessageSquareText size={18} aria-hidden="true" />}
-            title="Sms"
-            detail={hasPhone ? 'Stuur een bericht (Berichten)' : 'Volgt binnenkort'}
           />
           <ContactTile
             href={
@@ -114,6 +107,13 @@ export default function ContactPage() {
             icon={<Mail size={18} aria-hidden="true" />}
             title="Mail"
             detail={hasEmail ? CONTACT.email : 'E-mailadres volgt binnenkort'}
+          />
+          <ContactTile
+            href={SALON.instagram.url}
+            icon={<Instagram size={18} aria-hidden="true" />}
+            title="Instagram"
+            detail={`@${SALON.instagram.handle}`}
+            external
           />
         </div>
       </section>
@@ -145,15 +145,34 @@ export default function ContactPage() {
         </div>
 
         <div
-          id="bericht"
+          id="bereikbaarheid"
           className="reveal shadow-luxe rounded-[1.75rem] bg-card p-6 ring-1 ring-taupe/25 sm:p-8"
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-dark">
-            Bericht via je account
+            Zo bereik je Belise
           </p>
-          <h2 className="mt-3 font-serif text-3xl text-stone-900">Stuur Belise een bericht</h2>
+          <h2 className="mt-3 font-serif text-3xl text-stone-900">Even een bericht sturen</h2>
           <div aria-hidden="true" className="hairline my-6 h-px" />
-          <ContactMessageForm />
+          <div className="space-y-4 text-[15px] leading-relaxed text-primary/75">
+            <p>
+              Belise zet de agenda telkens open voor de komende weken. Zie je jouw moment nog niet
+              staan, of wil je verder vooruit plannen? Stuur gerust een bericht via WhatsApp,
+              Instagram of mail. Je krijgt zo snel mogelijk antwoord.
+            </p>
+            <p>
+              Tijdens behandelingen legt Belise de telefoon even weg. Op deze momenten kan het
+              antwoord iets langer op zich laten wachten:
+            </p>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[14px]">
+              {SALON.busyHours.map((slot) => (
+                <div key={slot.day} className="contents">
+                  <dt className="text-primary/60">{slot.day}</dt>
+                  <dd className="text-primary/80">{slot.hours}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="text-[13px] text-primary/55">{SALON.payment}</p>
+          </div>
         </div>
       </section>
     </main>

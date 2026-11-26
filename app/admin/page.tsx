@@ -1,24 +1,22 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { CalendarDays, CalendarX, Images, ListChecks, MessageSquare, Tags, Users, type LucideIcon } from 'lucide-react';
+import { CalendarDays, CalendarX, Images, ListChecks, Tags, Users, type LucideIcon } from 'lucide-react';
 import AgendaTab from '@/components/admin/AgendaTab';
 import AvailabilityTab from '@/components/admin/AvailabilityTab';
 import CustomersTab from '@/components/admin/CustomersTab';
-import MessagesTab from '@/components/admin/MessagesTab';
 import PortfolioTab from '@/components/admin/PortfolioTab';
 import SettingsTab from '@/components/admin/SettingsTab';
 import TodoTab from '@/components/admin/TodoTab';
 import { FOCUS_RING } from '@/lib/admin/ui';
 
-type TabId = 'agenda' | 'availability' | 'customers' | 'messages' | 'portfolio' | 'settings' | 'todo';
+type TabId = 'agenda' | 'availability' | 'customers' | 'portfolio' | 'settings' | 'todo';
 
 // short: label in de onderbalk op mobiel, waar zeven tabs naast elkaar staan.
 const TABS: { id: TabId; label: string; short: string; icon: LucideIcon }[] = [
   { id: 'agenda', label: 'Agenda', short: 'Agenda', icon: CalendarDays },
   { id: 'availability', label: 'Beschikbaarheid', short: 'Open', icon: CalendarX },
   { id: 'customers', label: 'Klanten', short: 'Klanten', icon: Users },
-  { id: 'messages', label: 'Berichten', short: 'Berichten', icon: MessageSquare },
   { id: 'portfolio', label: 'Portfolio', short: 'Portfolio', icon: Images },
   { id: 'settings', label: 'Tarieven & site', short: 'Tarieven', icon: Tags },
   { id: 'todo', label: 'To-do', short: 'To-do', icon: ListChecks },
@@ -32,7 +30,6 @@ export default function AdminPage() {
   if (activeTab === 'agenda') content = <AgendaTab />;
   else if (activeTab === 'availability') content = <AvailabilityTab />;
   else if (activeTab === 'customers') content = <CustomersTab />;
-  else if (activeTab === 'messages') content = <MessagesTab />;
   else if (activeTab === 'portfolio') content = <PortfolioTab />;
   else if (activeTab === 'settings') content = <SettingsTab />;
   else content = <TodoTab />;

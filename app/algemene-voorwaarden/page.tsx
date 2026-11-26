@@ -16,10 +16,10 @@ const TYPE = 'WebPage';
 export const metadata: Metadata = pageMetadata(PATH, TITLE, DESCRIPTION);
 
 const legal = SALON.legal;
-// Het annuleringsbeleid is nog niet beslist; daarom blijft de pagina een concept.
-const CANCELLATION_POLICY = '[IN TE VULLEN: annuleringstermijn en gevolgen van een no-show]';
+// De annuleringstermijn is nog niet beslist; daarom blijft de pagina een concept.
+const CANCELLATION_TERM = '[IN TE VULLEN: tot hoeveel uur vooraf kosteloos annuleren]';
 const isDraft =
-  Object.values(legal).some((value) => value.startsWith('[')) || CANCELLATION_POLICY.startsWith('[');
+  Object.values(legal).some((value) => value.startsWith('[')) || CANCELLATION_TERM.startsWith('[');
 
 export default function TermsPage() {
   return (
@@ -63,27 +63,40 @@ export default function TermsPage() {
             Een online boeking is een aanvraag. Je afspraak staat vast zodra Belise ze bevestigt.
           </li>
           <li>
-            De prijzen op de site zijn in euro en <Fill>[IN TE VULLEN: inclusief btw / vrijgesteld van btw]</Fill>
-            . De prijs die gold op het moment van je boeking blijft gelden.
+            De prijzen op de site zijn in euro. Belise is vrijgesteld van btw (bijzondere
+            vrijstellingsregeling voor kleine ondernemingen), er komt dus geen btw bij. De prijs die
+            gold op het moment van je boeking blijft gelden.
           </li>
           <li>
             De duur van een behandeling is een richttijd. Een behandeling kan wat korter of langer
             duren, afhankelijk van je haar, nagels of huid.
           </li>
           <li>
-            Ben je te laat, dan kan je behandeling ingekort worden, zodat de volgende klant niet
-            hoeft te wachten. De volledige prijs blijft verschuldigd.
+            Ben je te laat, laat het dan zo snel mogelijk weten. Belise bekijkt per geval of je
+            behandeling nog (volledig) kan doorgaan.
           </li>
           <li>
-            Je betaalt ter plaatse na de behandeling.{' '}
-            <Fill>[IN TE VULLEN: aanvaarde betaalmiddelen, bv. Bancontact, Payconiq, cash]</Fill>
+            Kom je voor nagels met een set die in een andere salon gezet is, dan rekenen we een
+            supplement van €5 aan voor het verwijderen, omdat de verwijdermethode vooraf niet
+            vastligt. Je voegt dit supplement toe bij het boeken.
           </li>
+          <li>
+            Je betaalt ter plaatse na de behandeling, met Payconiq of cash. Een overschrijving kan
+            enkel in overleg. Je betaalt geen voorschot.
+          </li>
+          <li>Cadeaubonnen zijn één jaar geldig vanaf de aankoop.</li>
         </ul>
       </LegalSection>
 
       <LegalSection title="5. Annuleren en no-show">
         <p>
-          <Fill>{CANCELLATION_POLICY}</Fill>
+          Kun je niet komen? Verwittig dan zo snel mogelijk via WhatsApp, Instagram of telefoon.
+          Kosteloos annuleren of verplaatsen kan <Fill>{CANCELLATION_TERM}</Fill>.
+        </p>
+        <p>
+          Kom je zonder verwittigen niet opdagen (no-show), dan wordt dat bij je klantgegevens
+          genoteerd. Bij herhaalde no-shows kan Belise beslissen geen nieuwe afspraken meer met je
+          te maken.
         </p>
         <p>
           Kan Belise een afspraak niet laten doorgaan, dan laten we je dat zo snel mogelijk weten en
@@ -110,7 +123,9 @@ export default function TermsPage() {
           </li>
           <li>
             Belise mag een behandeling weigeren of aanpassen als die niet veilig is, bijvoorbeeld
-            bij een infectie of beschadigde nagels of huid.
+            bij een infectie of beschadigde nagels of huid. Komt een probleem met het resultaat
+            voort uit de toestand van je nagels, haar of huid, dan kan Belise beslissen dezelfde
+            behandeling niet opnieuw uit te voeren.
           </li>
           <li>Volg de nazorgadviezen die je krijgt; zo blijft het resultaat het mooist.</li>
         </ul>
@@ -122,6 +137,10 @@ export default function TermsPage() {
           <Fill>[IN TE VULLEN: aantal dagen, bv. 7]</Fill> dagen na je behandeling. Belise kijkt
           dan graag hoe het kan worden rechtgezet. Schade door eigen gebruik (bijvoorbeeld werken
           zonder handschoenen, nagels gebruiken als gereedschap) valt niet onder de garantie.
+        </p>
+        <p>
+          Breekt er binnen een week na je behandeling een gelnagel af, dan mag je langskomen voor
+          een gratis herstel.
         </p>
         <p>
           Komen we er samen niet uit, dan kun je terecht bij de Consumentenombudsdienst

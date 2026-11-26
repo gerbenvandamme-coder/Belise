@@ -183,7 +183,7 @@ function AccountFlow() {
         title: returnsToBooking ? 'Verder boeken' : 'Nieuwe afspraak',
         detail: 'Kies een vrij moment',
       },
-      { href: '/contact#bericht', title: 'Berichten', detail: 'Stuur Belise een vraag' },
+      { href: '/contact', title: 'Contact', detail: 'Vraag iets via WhatsApp of Instagram' },
     ];
     return (
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 lg:py-16">

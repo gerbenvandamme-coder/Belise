@@ -9,7 +9,7 @@ export const CONTENT_PUBLISHED = '2026-11-12';
 
 export const SITE_NAME = 'Belise Beauty';
 export const SITE_DESCRIPTION =
-  'Belise is een beautysalon in Opwijk (Vlaams-Brabant) voor gelnagels, BIAB, ontharing en haarverzorging. Enkel op afspraak, online te boeken.';
+  'Belise is een beautysalon in Opwijk (Vlaams-Brabant) voor gelnagels, manicure, ontharing en haarverzorging. Enkel op afspraak, online te boeken.';
 
 export const absoluteUrl = (path = '/') => `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 

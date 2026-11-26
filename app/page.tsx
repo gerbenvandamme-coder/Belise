@@ -135,7 +135,7 @@ export default async function HomePage() {
               {[
                 ['Op afspraak', 'Persoonlijke aandacht'],
                 ['Online boeken', 'Wanneer het jou past'],
-                ['Opwijk', 'Nanovestraat 71'],
+                ['Opwijk', 'Nanovestraat 71 A'],
               ].map(([title, detail]) => (
                 <li key={title} className="px-3">
                   <span className="block font-serif text-base italic text-primary">{title}</span>
