@@ -1,30 +1,36 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { CalendarDays, CalendarX, Images, ListChecks, Tags, Users, type LucideIcon } from 'lucide-react';
+import { CalendarDays, CalendarX, Globe, Images, ListChecks, Tags, Users, type LucideIcon } from 'lucide-react';
 import AgendaTab from '@/components/admin/AgendaTab';
 import AvailabilityTab from '@/components/admin/AvailabilityTab';
 import CustomersTab from '@/components/admin/CustomersTab';
 import PortfolioTab from '@/components/admin/PortfolioTab';
 import SettingsTab from '@/components/admin/SettingsTab';
 import TodoTab from '@/components/admin/TodoTab';
+import WebsiteTab from '@/components/admin/WebsiteTab';
 import { FOCUS_RING } from '@/lib/admin/ui';
+import { useIsDeveloper } from '@/lib/admin/developer';
 
-type TabId = 'agenda' | 'availability' | 'customers' | 'portfolio' | 'settings' | 'todo';
+type TabId = 'agenda' | 'availability' | 'customers' | 'portfolio' | 'settings' | 'website' | 'todo';
 
-// short: label in de onderbalk op mobiel, waar zeven tabs naast elkaar staan.
+// short: label in de onderbalk op mobiel, waar alle tabs naast elkaar staan.
 const TABS: { id: TabId; label: string; short: string; icon: LucideIcon }[] = [
   { id: 'agenda', label: 'Agenda', short: 'Agenda', icon: CalendarDays },
   { id: 'availability', label: 'Beschikbaarheid', short: 'Open', icon: CalendarX },
   { id: 'customers', label: 'Klanten', short: 'Klanten', icon: Users },
   { id: 'portfolio', label: 'Portfolio', short: 'Portfolio', icon: Images },
-  { id: 'settings', label: 'Tarieven & site', short: 'Tarieven', icon: Tags },
+  { id: 'settings', label: 'Behandelingen & prijzen', short: 'Prijzen', icon: Tags },
+  { id: 'website', label: 'Website', short: 'Website', icon: Globe },
   { id: 'todo', label: 'To-do', short: 'To-do', icon: ListChecks },
 ];
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabId>('agenda');
-  const active = TABS.find((tab) => tab.id === activeTab) ?? TABS[0];
+  const isDeveloper = useIsDeveloper();
+  // De To-do-lijst is voor de ontwikkelaar, niet voor de eigenares.
+  const tabs = isDeveloper ? TABS : TABS.filter((tab) => tab.id !== 'todo');
+  const active = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
 
   let content: ReactNode;
   if (activeTab === 'agenda') content = <AgendaTab />;
@@ -32,7 +38,9 @@ export default function AdminPage() {
   else if (activeTab === 'customers') content = <CustomersTab />;
   else if (activeTab === 'portfolio') content = <PortfolioTab />;
   else if (activeTab === 'settings') content = <SettingsTab />;
-  else content = <TodoTab />;
+  else if (activeTab === 'website') content = <WebsiteTab />;
+  else if (activeTab === 'todo' && isDeveloper) content = <TodoTab />;
+  else content = <AgendaTab />;
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
@@ -40,8 +48,11 @@ export default function AdminPage() {
         aria-label="Adminmenu"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-taupe/40 bg-card/95 backdrop-blur lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:border-r lg:border-t-0 lg:bg-card"
       >
-        <ul className="grid grid-cols-7 gap-0.5 p-1.5 lg:flex lg:flex-col lg:gap-2 lg:p-4">
-          {TABS.map((tab) => {
+        <ul
+          className="grid gap-0.5 p-1.5 lg:flex lg:flex-col lg:gap-2 lg:p-4"
+          style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
+        >
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const selected = tab.id === activeTab;
             return (

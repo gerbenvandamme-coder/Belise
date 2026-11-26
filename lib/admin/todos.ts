@@ -51,14 +51,14 @@ export const TODO_GROUPS: readonly TodoGroup[] = [
       },
       {
         id: 'migraties',
-        title: 'Databasestructuur installeren (8 migraties)',
+        title: 'Databasestructuur installeren (9 migraties)',
         owner: 'ontwikkelaar',
         priority: 1,
         why: 'Maakt de tabellen, beveiligingsregels en opslagmappen aan.',
         steps: [
           'Supabase → SQL Editor, de bestanden uit supabase/migrations/ in deze volgorde uitvoeren:',
           '1 init_belise · 2 whitelist_availability · 3 whitelist_create_booking · 4 admin_services_site_settings',
-          '5 harden_bookings · 6 nail_design_and_massage · 7 portfolio_and_messages · 8 portfolio_frames',
+          '5 harden_bookings · 6 nail_design_and_massage · 7 portfolio_and_messages · 8 portfolio_frames · 9 klantbeheer_en_site',
           'Alles is herhaalbaar: opnieuw uitvoeren kan geen kwaad.',
         ],
         where: 'Supabase → SQL Editor',
@@ -150,39 +150,6 @@ export const TODO_GROUPS: readonly TodoGroup[] = [
       'Teksten en gegevens die enkel jij kunt aanleveren. Schrijf ze gewoon in je eigen woorden (een notitie of spraakbericht is genoeg); de ontwikkelaar zet ze op de site.',
     items: [
       {
-        id: 'contact',
-        title: 'Contactgegevens doorgeven',
-        owner: 'eigenares',
-        priority: 1,
-        why: 'Tot dan staan de knoppen Bellen, Sms, WhatsApp en Mail op "volgt binnenkort".',
-        steps: [
-          'Telefoonnummer zoals het op de site mag staan (bv. 0470 12 34 56).',
-          'Is dat ook je WhatsApp-nummer? Zo niet: welk nummer voor WhatsApp?',
-          'E-mailadres voor klanten (liefst een adres van de zaak, niet privé).',
-        ],
-        where: 'Pagina Contact, footer, Google',
-      },
-      {
-        id: 'faq',
-        title: 'Veelgestelde vragen beantwoorden',
-        owner: 'eigenares',
-        priority: 1,
-        why: 'Een FAQ is wat Google en AI-assistenten (ChatGPT, Gemini) het vaakst letterlijk overnemen. Kort en eerlijk antwoorden, 1–3 zinnen per vraag.',
-        steps: [
-          'Hoe lang houden gelnagels en BIAB gemiddeld?',
-          'Wat is het verschil tussen BIAB en gelnagels, en wat raad je wie aan?',
-          'Mag ik met nagels van een andere salon komen? Kost verwijderen extra?',
-          'Hoe lang moet mijn haar zijn voor een waxbeurt, en wat doe ik best vooraf?',
-          'Hoe annuleer of verplaats ik een afspraak, en tot wanneer kan dat kosteloos?',
-          'Hoe kan ik betalen (cash, Payconiq, Bancontact)?',
-          'Waar kan ik parkeren?',
-          'Kan ik een cadeaubon kopen?',
-          'Werk je met afspraak op zaterdag of ’s avonds?',
-          'Wat als ik te laat ben?',
-        ],
-        where: 'Nieuwe FAQ-sectie op de site',
-      },
-      {
         id: 'uitleg-behandelingen',
         title: 'Korte uitleg per behandeling',
         owner: 'eigenares',
@@ -190,8 +157,7 @@ export const TODO_GROUPS: readonly TodoGroup[] = [
         why: 'Op /behandelingen staat nu een algemene concepttekst per groep en per behandeling (in het infovenster). Die moet nagelezen en in jouw woorden aangepast worden; het staat in lib/treatmentInfo.ts.',
         steps: [
           'Gelnagels: wat is het, hoe lang houdt het, wanneer bijwerken?',
-          'BIAB: voor wie is het ideaal, verschil met gel, "op tenen"?',
-          'Manicure & verwijderen: wat zit er in een manicure?',
+                    'Manicure & verwijderen: wat zit er in een manicure?',
           'Ontharing: welke wax gebruik je, hoe lang blijft het glad, nazorg?',
           'Snit & kleuring / mèches / balayage: verschil tussen mèches en balayage, wat is "deels"?',
           'Brushing: wat bepaalt kort/midden/lang?',
@@ -313,7 +279,7 @@ export const TODO_GROUPS: readonly TodoGroup[] = [
         priority: 3,
         why: 'AI-assistenten verwijzen graag naar duidelijke uitleg van een vakvrouw.',
         steps: [
-          'Onderwerpen kiezen, bv. "BIAB of gelnagels?", "Voorbereiden op een waxbeurt", "Balayage of mèches?".',
+          'Onderwerpen kiezen, bv. "Voorbereiden op een waxbeurt", "Balayage of mèches?".',
           'Eigenares vertelt de inhoud, ontwikkelaar maakt er een pagina van.',
         ],
       },
@@ -324,19 +290,6 @@ export const TODO_GROUPS: readonly TodoGroup[] = [
     title: 'Juridisch en privacy',
     intro: 'De voorwaarden en privacyverklaring staan als concept online. Deze punten moeten nog ingevuld of nagekeken worden.',
     items: [
-      {
-        id: 'bedrijfsgegevens',
-        title: 'Bedrijfsgegevens invullen',
-        owner: 'eigenares',
-        priority: 1,
-        why: 'Wettelijk verplicht op de site (WER, art. III.74).',
-        steps: [
-          'Volledige naam zaakvoerder en rechtsvorm (eenmanszaak of vennootschap).',
-          'Ondernemingsnummer (KBO).',
-          'Btw-nummer, of vermelding vrijstelling kleine onderneming (art. 56bis WBTW).',
-        ],
-        where: 'Algemene voorwaarden, privacyverklaring, footer',
-      },
       {
         id: 'annulering',
         title: 'Annuleringsbeleid vastleggen',
@@ -362,30 +315,6 @@ export const TODO_GROUPS: readonly TodoGroup[] = [
           'Foto’s bij een boeking: bv. 12 maanden na de afspraak?',
         ],
         where: 'Privacyverklaring',
-      },
-      {
-        id: 'privacy-hosting',
-        title: 'Privacyverklaring bijwerken: hosting en doorgifte buiten de EU',
-        owner: 'ontwikkelaar',
-        priority: 1,
-        why: 'De verklaring noemt nog Cloudflare, maar de site draait op Vercel. Ook de doorgifte naar de VS (DPF of SCC) moet correct vermeld staan.',
-        steps: [
-          'Cloudflare vervangen door Vercel Inc. (hosting).',
-          'Nakijken onder welke regeling Vercel en Supabase gegevens buiten de EU kunnen raadplegen en dat vermelden.',
-          'Verwerkersovereenkomsten (DPA) van Vercel en Supabase accepteren en bewaren.',
-        ],
-        where: 'Privacyverklaring',
-      },
-      {
-        id: 'toestemming-fotos',
-        title: 'Toestemming voor portfoliofoto’s',
-        owner: 'eigenares',
-        priority: 2,
-        why: 'De portfoliofoto’s zijn publiek. Een herkenbare hand of gezicht vraagt toestemming van de klant.',
-        steps: [
-          'Vraag het telkens kort (WhatsApp-bericht met "ja" volstaat als bewijs).',
-          'Liefst geen herkenbare tatoeages, juwelen of gezichten.',
-        ],
       },
       {
         id: 'verwerker',
@@ -420,14 +349,6 @@ export const TODO_GROUPS: readonly TodoGroup[] = [
         priority: 3,
         why: 'Nu ziet de klant de status enkel in zijn account.',
         steps: ['Afzenderadres van de zaak nodig (eigen domein).', 'Kiezen welke mails: ontvangen, bevestigd, herinnering, geannuleerd.'],
-      },
-      {
-        id: 'voorschot',
-        title: 'Voorschot of no-showbeleid in de boeking',
-        owner: 'samen',
-        priority: 3,
-        why: 'Enkel als no-shows een probleem blijken.',
-        steps: ['Beslissing eigenares, daarna betaalprovider kiezen (bv. Mollie).'],
       },
       {
         id: 'inwerktijd',

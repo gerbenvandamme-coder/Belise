@@ -10,6 +10,7 @@ import { TREATMENT_CATEGORIES, visibleCategories } from '@/lib/treatments';
 import { fetchTreatmentCategories } from '@/lib/services';
 import { loadCutouts } from '@/lib/showcase';
 import { createPublicSupabase } from '@/lib/supabasePublic';
+import { fetchSiteContent } from '@/lib/siteContent';
 
 // Tarieven worden elke minuut opnieuw opgehaald, zodat wijzigingen in /admin snel zichtbaar zijn.
 export const revalidate = 60;
@@ -22,6 +23,8 @@ export default async function HomePage() {
   const categories = visibleCategories(
     client ? await fetchTreatmentCategories(client) : TREATMENT_CATEGORIES,
   );
+  const site = await fetchSiteContent(client);
+  const remote = (src: string) => !src.startsWith('/');
 
   return (
     <main id="top" className="flex-1">
@@ -68,10 +71,11 @@ export default async function HomePage() {
                 className="absolute inset-x-0 top-0 aspect-[1536/2752] origin-bottom scale-[1.3]"
               >
                 <Image
-                  src="/assets/Front/Clean%20front%20picture.jpg"
-                  alt="Zaakvoerder van Belise"
+                  src={site.heroPhoto}
+                  alt={site.ownerName ? `${site.ownerName}, zaakvoerder van Belise` : 'Zaakvoerder van Belise'}
                   fill
                   priority
+                  unoptimized={remote(site.heroPhoto)}
                   sizes="(min-width: 1024px) 40vw, 90vw"
                   className="object-cover"
                 />
@@ -82,13 +86,15 @@ export default async function HomePage() {
               />
             </div>
             {/* Dezelfde foto, uitgeknipt: hoofd en schouders steken boven het kader uit. Onderaan blijft het afgesneden. */}
+            {site.heroCutout && (
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 [clip-path:inset(-30%_-12%_0_-12%_round_0_0_2rem_2rem)]"
             >
               <div className="absolute inset-x-0 top-0 aspect-[1536/2752] origin-bottom scale-[1.3]">
                 <Image
-                  src="/assets/Front/front-cutout.webp"
+                  src={site.heroCutout}
+                  unoptimized={remote(site.heroCutout)}
                   alt=""
                   fill
                   priority
@@ -98,6 +104,7 @@ export default async function HomePage() {
                 />
               </div>
             </div>
+            )}
             </div>
             <figcaption className="mt-8 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-primary/55">
               <span aria-hidden="true" className="hairline h-px flex-1" />
@@ -151,7 +158,11 @@ export default async function HomePage() {
 
       <Ornament className="px-6" />
 
-      <HomeCrossroads categoryTitles={categories.map((category) => category.title)} cutouts={loadCutouts()} />
+      <HomeCrossroads
+        categoryTitles={categories.map((category) => category.title)}
+        cutouts={loadCutouts()}
+        ownerPhoto={site.aboutPhoto}
+      />
     </main>
   );
 }

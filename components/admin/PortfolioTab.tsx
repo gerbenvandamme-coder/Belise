@@ -102,6 +102,54 @@ function TagEditor({
   );
 }
 
+type ClientOption = { id: string; name: string; consent: boolean };
+
+/** Klant op de foto kiezen, met de status van haar fototoestemming. */
+function ClientPicker({
+  clients,
+  value,
+  onChange,
+  disabled,
+}: {
+  clients: ClientOption[];
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  const selected = clients.find((client) => client.id === value) ?? null;
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm text-primary/80">
+        Klant op de foto
+        <select
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+          className={`mt-2 ${INPUT_CLASS}`}
+        >
+          <option value="">Geen klant gekoppeld</option>
+          {clients.map((client) => (
+            <option key={client.id} value={client.id}>
+              {client.name} {client.consent ? '· toestemming' : '· geen toestemming'}
+            </option>
+          ))}
+        </select>
+      </label>
+      {selected && (
+        <p
+          className={`rounded-full px-3 py-1 text-xs font-medium ${
+            selected.consent ? 'bg-accent-soft text-accent-dark' : 'bg-red-50 text-red-800'
+          }`}
+        >
+          {selected.consent
+            ? 'Mag gedeeld worden (portfolio en Instagram)'
+            : 'Niet delen: geen fototoestemming'}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function PortfolioTab() {
   const [items, setItems] = useState<PortfolioItemRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -120,6 +168,8 @@ export default function PortfolioTab() {
   const [framesStatus, setFramesStatus] = useState<string | null>(null);
 
   const [filter, setFilter] = useState<PortfolioCategoryId | 'all'>('all');
+  const [clients, setClients] = useState<ClientOption[]>([]);
+  const [clientId, setClientId] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
@@ -156,6 +206,31 @@ export default function PortfolioTab() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('admin_profiles')
+      .select('*')
+      .eq('role', 'client')
+      .order('full_name', { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setClients(
+          (data ?? []).map((row) => ({
+            id: row.id,
+            name: row.full_name,
+            consent: row.photo_consent === true,
+          })),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const clientById = (id: string | null) => clients.find((client) => client.id === id) ?? null;
+  const selectedClient = clientById(clientId || null);
 
   async function setFrame(id: PortfolioCategoryId, on: boolean) {
     const previous = frames;
@@ -205,6 +280,9 @@ export default function PortfolioTab() {
         title: title.trim() || null,
         tags: newTags,
         has_transparency: transparent,
+        client_id: clientId || null,
+        // Zonder toestemming van de gekoppelde klant blijft de foto verborgen.
+        is_published: !selectedClient || selectedClient.consent,
       });
       if (insertError) {
         await supabase.storage.from(PORTFOLIO_BUCKET).remove([path]);
@@ -215,7 +293,12 @@ export default function PortfolioTab() {
       setTransparent(false);
       setTitle('');
       setNewTags([]);
-      setUploadStatus('Foto toegevoegd aan het portfolio.');
+      setUploadStatus(
+        selectedClient && !selectedClient.consent
+          ? 'Foto opgeslagen, maar verborgen: deze klant gaf (nog) geen toestemming om foto\'s te delen.'
+          : 'Foto toegevoegd aan het portfolio.',
+      );
+      setClientId('');
       setReload((value) => value + 1);
       (event.target as HTMLFormElement).reset();
     } catch (uploadError) {
@@ -230,9 +313,14 @@ export default function PortfolioTab() {
     const { error: updateError } = await supabase.from('portfolio_items').update(patch).eq('id', id);
     setBusyId(null);
     if (updateError) {
-      setError('Wijziging mislukt.');
+      setError(
+        updateError.message.includes('toestemming')
+          ? 'Deze klant gaf geen toestemming om foto\'s te delen. Pas dat eerst aan bij Klanten.'
+          : 'Wijziging mislukt.',
+      );
       return;
     }
+    setError(null);
     setItems((current) =>
       (current ?? []).map((item) => (item.id === id ? { ...item, ...patch } : item)),
     );
@@ -362,12 +450,14 @@ export default function PortfolioTab() {
               />
             </label>
           </div>
+          <ClientPicker clients={clients} value={clientId} onChange={setClientId} />
           <div className="text-sm text-primary/80">
             Tags
             <TagEditor tags={newTags} suggestions={allTags} onChange={setNewTags} disabled={uploading} />
           </div>
           <p className="text-xs leading-relaxed text-primary/55">
-            Plaats enkel foto&apos;s waarvoor de klant toestemming gaf. Gezichten liefst niet herkenbaar.
+            Koppel de foto aan de klant, zodat je altijd ziet of ze gedeeld mag worden. Zonder
+            toestemming blijft de foto verborgen. Gezichten liefst niet herkenbaar.
           </p>
           {uploadStatus && (
             <p role="status" className="text-sm text-primary/80">
@@ -468,6 +558,18 @@ export default function PortfolioTab() {
                 suggestions={allTags}
                 disabled={busyId === item.id}
                 onChange={(tags) => update(item.id, { tags })}
+              />
+              <ClientPicker
+                clients={clients}
+                value={item.client_id ?? ''}
+                disabled={busyId === item.id}
+                onChange={(value) => {
+                  const next = clientById(value || null);
+                  update(item.id, {
+                    client_id: value || null,
+                    ...(next && !next.consent ? { is_published: false } : {}),
+                  });
+                }}
               />
               {confirmDelete === item.id ? (
                 <div className="flex gap-2">
