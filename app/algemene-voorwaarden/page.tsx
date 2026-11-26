@@ -53,7 +53,10 @@ export default function TermsPage() {
         <p>
           Om online te boeken maak je een account aan. Je zorgt ervoor dat je gegevens juist zijn,
           zodat we je kunnen bereiken over je afspraak.{' '}
-          <Fill>[IN TE VULLEN: minimumleeftijd, bv. jonger dan 16 boek je via een ouder]</Fill>
+          Je moet minstens 16 jaar zijn om zelf een account aan te maken en te boeken. Ben je
+          jonger, dan boekt een ouder of voogd voor jou en kom je in diens naam.
+          Kleuring, mèches en balayage doen we vanaf 16 jaar, omdat haarkleurmiddelen niet bedoeld
+          zijn voor jongere personen.
         </p>
       </LegalSection>
 

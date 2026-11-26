@@ -369,7 +369,7 @@ function AccountFlow() {
                   className={CHECKBOX_CLASS}
                 />
                 <span>
-                  Ik ga akkoord met de{' '}
+                  Ik ben minstens 16 jaar (of ik maak dit account aan als ouder) en ga akkoord met de{' '}
                   <a
                     href="/algemene-voorwaarden"
                     target="_blank"
