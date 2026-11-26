@@ -121,11 +121,16 @@ export default function PrivacyPage() {
         <ul>
           <li>Account en allergieën: tot je je account verwijdert of je toestemming intrekt.</li>
           <li>
-            Afspraken en salonnotities:{' '}
-            <Fill>[IN TE VULLEN: bv. tot 3 jaar na je laatste afspraak]</Fill>.
+            Foto&apos;s in het portfolio: tot je je toestemming intrekt; de foto gaat dan meteen
+            offline.
           </li>
           <li>
-            Foto&apos;s bij een boeking: <Fill>[IN TE VULLEN: bv. 12 maanden na de afspraak]</Fill>.
+            Afspraken, salonnotities en het aantal no-shows: tot 3 jaar na je laatste afspraak.
+            Daarna wissen we je account met alle gegevens automatisch.
+          </li>
+          <li>
+            Foto&apos;s bij een boeking: 12 maanden na de afspraak. Daarna worden ze automatisch
+            verwijderd.
           </li>
           <li>Gegevens die we wettelijk moeten bewaren (bv. facturen): zolang de wet dat vraagt.</li>
         </ul>

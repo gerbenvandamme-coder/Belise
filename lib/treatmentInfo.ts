@@ -44,7 +44,10 @@ export const GROUP_INFO: Record<string, InfoBlock> = {
   'Snit & Kleuring': {
     description:
       'Een snit afgestemd op je haartype en gezicht, eventueel gecombineerd met een kleuring en brushing.',
-    tips: ['De prijs hangt af van je haarlengte: kies kort, midden of lang bij het boeken.'],
+    tips: [
+      'De prijs hangt af van je haarlengte: kies kort, midden of lang bij het boeken.',
+      'Kleuring doen we vanaf 16 jaar.',
+    ],
   },
   'Technieken & Brushing': {
     description:
@@ -53,6 +56,7 @@ export const GROUP_INFO: Record<string, InfoBlock> = {
       '"Deels" betekent enkel de bovenkant of het gezicht; "volledig" het hele hoofd.',
       'Inwerktijd is inbegrepen in de geplande duur.',
       'Bij brushing en balayage wordt je haar ter plaatse gewassen.',
+      'Mèches en balayage doen we vanaf 16 jaar.',
     ],
   },
   Massage: {

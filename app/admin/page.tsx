@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { CalendarDays, CalendarX, Globe, Images, ListChecks, Tags, Users, type LucideIcon } from 'lucide-react';
 import AgendaTab from '@/components/admin/AgendaTab';
 import AvailabilityTab from '@/components/admin/AvailabilityTab';
@@ -11,6 +11,7 @@ import TodoTab from '@/components/admin/TodoTab';
 import WebsiteTab from '@/components/admin/WebsiteTab';
 import { FOCUS_RING } from '@/lib/admin/ui';
 import { useIsDeveloper } from '@/lib/admin/developer';
+import { runRetentionCleanup } from '@/lib/admin/retention';
 
 type TabId = 'agenda' | 'availability' | 'customers' | 'portfolio' | 'settings' | 'website' | 'todo';
 
@@ -28,6 +29,19 @@ const TABS: { id: TabId; label: string; short: string; icon: LucideIcon }[] = [
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabId>('agenda');
   const isDeveloper = useIsDeveloper();
+  const [cleanupNote, setCleanupNote] = useState<string | null>(null);
+
+  // Bewaartermijnen toepassen (max. één keer per dag). Zie lib/admin/retention.ts.
+  useEffect(() => {
+    runRetentionCleanup()
+      .then((result) => {
+        if (!result || (result.photosRemoved === 0 && result.clientsErased === 0)) return;
+        setCleanupNote(
+          `Automatische opkuis: ${result.photosRemoved} oude boekingsfoto's verwijderd, ${result.clientsErased} inactieve klanten gewist (bewaartermijn verstreken).`,
+        );
+      })
+      .catch(() => undefined);
+  }, []);
   // De To-do-lijst is voor de ontwikkelaar, niet voor de eigenares.
   const tabs = isDeveloper ? TABS : TABS.filter((tab) => tab.id !== 'todo');
   const active = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
@@ -77,6 +91,11 @@ export default function AdminPage() {
 
       <main className="flex-1 px-5 pb-28 pt-8 lg:px-10 lg:pb-12">
         <h1 className="font-serif text-3xl font-normal text-primary">{active.label}</h1>
+        {cleanupNote && (
+          <p role="status" className="mt-3 rounded-2xl bg-accent-soft/60 px-4 py-3 text-sm text-primary/80">
+            {cleanupNote}
+          </p>
+        )}
         <div className="mt-6">{content}</div>
       </main>
     </div>
